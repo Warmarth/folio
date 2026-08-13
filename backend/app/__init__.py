@@ -1,6 +1,6 @@
+import os
 from flask import Flask
 from app.database import db
-from app.models import ProfileCard
 from app.routes import api
 
 def create_app(config_name='development'):
@@ -8,6 +8,7 @@ def create_app(config_name='development'):
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JSON_SORT_KEYS'] = False
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
     
     
     db.init_app(app)

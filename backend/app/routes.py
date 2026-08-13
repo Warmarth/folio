@@ -189,6 +189,6 @@ def delete_profile(id):
 @api.route('/', methods=['GET'])
 def home():
     return jsonify({
-        "mesage":"welcome to the de learner"  
+        "message":"welcome to the de learner"  
     }),200
     

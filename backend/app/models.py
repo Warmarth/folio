@@ -29,3 +29,4 @@ class ProfileCard(db.Model):
             data["image"] = f"data:{self.image_mini}; base64,{b64}" if self.image_mini else b64
             
         return data
+    
