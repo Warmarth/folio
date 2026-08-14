@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from app.database import db
-from app.routes import api
+from app.routes.routes import api
 
 def create_app(config_name='development'):
     app = Flask(__name__,instance_relative_config=True)
