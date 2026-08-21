@@ -2,34 +2,38 @@ from flask import request,jsonify,Blueprint
 from app.database import db
 import base64
 from app.models import ProfileCard
+from flask_jwt_extended import get_jwt_identity,jwt_required
 
 api = Blueprint('api',__name__)
 
 
 #=== create profile card ===
 @api.route('/create_profile', methods=["POST"])
+@jwt_required()
 def create_profile_card():
     # Support both JSON and form-data
+    access_token  = get_jwt_identity()
+    
     if request.is_json:
         name = request.json.get('name', '').strip()
-        email = request.json.get('email', '').strip()
+        # email = request.json.get('email', '').strip()
         bio = request.json.get('bio')
         image_b64 = request.json.get('image')  # base64 string
         image_bytes = base64.b64decode(image_b64) if image_b64 else None
         mimetype = request.json.get('image_mini')
     else:
         name = request.form.get('name', '').strip()
-        email = request.form.get('email', '').strip()
+        # email = request.form.get('email', '').strip()
         bio = request.form.get('bio')
         file = request.files.get('image')
         image_bytes = file.read() if file else None
         mimetype = file.mimetype if file else request.form.get('image_mini')
     
-    if not name or not email:
-        return jsonify({"error": "fields 'name' and 'email' are required"}), 400
+    if not name:
+        return jsonify({"error": "fields 'name' is required"}), 400
     
     # Prevent duplicates
-    if ProfileCard.query.filter_by(email=email).first():
+    if ProfileCard.query.filter_by(user_id=access_token).first():
         return jsonify({"error": "email already registered"}), 409
     
     file = request.files.get('image')
@@ -52,8 +56,9 @@ def create_profile_card():
         mimetype = file.mimetype
     
     card = ProfileCard(
+        user_id = access_token,
         name=name,
-        email=email,
+        # email=email,
         bio=bio,
         image=image_bytes,
         image_mini=mimetype
@@ -65,9 +70,11 @@ def create_profile_card():
     return jsonify({'data': card.to_dict()}), 201
 
 #=== read one ===
-@api.route('/all_profile/<string:id>',methods=['GET'])
-def get_one(id):
-    profile = ProfileCard.query.get_or_404(id, description="profile not found")
+@api.route('/profile',methods=['GET'])
+@jwt_required()
+def get_one():
+    user_id = get_jwt_identity()
+    profile = ProfileCard.query.filter_by(user_id=user_id).first_or_404(description="user is not found")
     return jsonify({"data": profile.to_dict()}), 200
 
 #=== read all ===
@@ -93,9 +100,12 @@ def get_all_profile():
     
     
 #=== update profile ===
-@api.route('/all_profile/<string:id>', methods=['PATCH', 'PUT'])
-def edit_profile(id):
-    profile = ProfileCard.query.get(id)
+@api.route('/edit_profile', methods=['PATCH', 'PUT'])
+@jwt_required()
+def edit_profile():
+    user_id = get_jwt_identity()
+    profile = ProfileCard.query.filter_by(user_id=user_id).first()
+    
     if not profile:
         return jsonify({"error": "profile not found"}), 404
     
@@ -110,7 +120,8 @@ def edit_profile(id):
     
     updated = False
     
-    # Update name
+    # Update name 
+    
     if 'name' in body:
         name = body.get('name', '').strip()
         if not name:
@@ -118,20 +129,10 @@ def edit_profile(id):
         profile.name = name
         updated = True
     
-    # Update email (with duplicate check)
-    if 'email' in body:
-        email = body.get('email', '').strip()
-        if not email:
-            return jsonify({"error": "email cannot be empty"}), 400
-        if email != profile.email:
-            if ProfileCard.query.filter_by(email=email).first():
-                return jsonify({"error": "email already in use"}), 409
-            profile.email = email
-            updated = True
     
     # Update bio
     if 'bio' in body:
-        profile.bio = body.get('bio').strip()
+        profile.bio = body.get('bio')
         updated = True
     
     # JSON: base64 image string
@@ -170,9 +171,11 @@ def edit_profile(id):
     }), 200
 
 
-@api.route('/all_profile/<string:id>',methods=['DELETE'])
-def delete_profile(id):
-    profile = ProfileCard.query.get(id)
+@api.route('/delete_user',methods=['DELETE'])
+@jwt_required()
+def delete_profile():
+    user_id = get_jwt_identity()
+    profile = ProfileCard.query.filter_by(user_id=user_id).first()
     
     if not profile:
         return jsonify({"message":"user Profile not found"}),404
@@ -180,7 +183,7 @@ def delete_profile(id):
     db.session.commit()
     
     return jsonify({
-        "id":id,
+        "id":profile.id,
         "message":"User profile succsefully deleted.",
     }),201
     
