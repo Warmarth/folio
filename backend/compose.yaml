@@ -8,3 +8,4 @@ services:
       - ./instance:/app/instance
     env_file:
       - .env
+      
