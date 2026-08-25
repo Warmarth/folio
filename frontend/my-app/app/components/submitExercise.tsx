@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_URL = "http://127.0.0.1:5000";
 
@@ -16,13 +16,13 @@ type SubmitExerciseProps = {
   exerciseId: string;
 };
 
-export default function SubmitExercise({
-  exerciseId,
-}: SubmitExerciseProps) {
+export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingSubmission, setCheckingSubmission] = useState(true);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [error, setError] = useState("");
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,7 +41,6 @@ export default function SubmitExercise({
 
     setLoading(true);
     setError("");
-    setSubmission(null);
 
     try {
       const response = await fetch(
@@ -65,9 +64,12 @@ export default function SubmitExercise({
         return;
       }
 
+      // POST endpoint returns { submission: {...} }
       setSubmission(data.submission);
 
-      // Optional: clear the answer after successful submission
+      // The user now has a submission
+      setHasSubmitted(true);
+
       setAnswer("");
     } catch (error) {
       console.error("Submit exercise error:", error);
@@ -77,59 +79,126 @@ export default function SubmitExercise({
     }
   }
 
+  async function get_exercise() {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      setError("You must be logged in to view your submission.");
+      setCheckingSubmission(false);
+      return;
+    }
+
+    try {
+      setCheckingSubmission(true);
+      setError("");
+
+      const response = await fetch(
+        `${API_URL}/api/submit/submitted_exrecise/${exerciseId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      // 404 means the user has not submitted this exercise yet.
+      if (response.status === 404) {
+        setSubmission(null);
+        setHasSubmitted(false);
+        return;
+      }
+
+      if (!response.ok) {
+        setError(data.message || "Failed to retrieve exercise submission.");
+        return;
+      }
+
+      // GET endpoint returns { data: {...} }
+      setSubmission(data.data);
+      setHasSubmitted(true);
+    } catch (error) {
+      console.error("Get submitted exercise error:", error);
+      setError("Something went wrong while retrieving your submission.");
+    } finally {
+      setCheckingSubmission(false);
+    }
+  }
+
+  useEffect(() => {
+    get_exercise();
+  }, [exerciseId]);
+
+  // While checking whether the user already submitted
+  if (checkingSubmission) {
+    return (
+      <section className="mt-8 bg-white border border-black/10 rounded-lg p-6">
+        <p className="text-sm text-black/50">Checking your submission...</p>
+      </section>
+    );
+  }
+
   return (
     <section className="mt-8 bg-white border border-black/10 rounded-lg p-6">
       <h2 className="text-xl font-serif">
-        Submit your answer
+        {hasSubmitted ? "Your submission" : "Submit your answer"}
       </h2>
 
-      <p className="text-sm text-black/50 mt-1 mb-4">
-        Write your answer below and submit it for evaluation.
-      </p>
+      {!hasSubmitted && (
+        <p className="text-sm text-black/50 mt-1 mb-4">
+          Write your answer below and submit it for evaluation.
+        </p>
+      )}
 
-      <form onSubmit={handleSubmit}>
-        <textarea
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Write your answer here..."
-          rows={8}
-          disabled={loading}
-          className="w-full border border-black/10 rounded-lg p-4 outline-none focus:border-black/40 resize-y"
-        />
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-        {error && (
-          <p className="mt-3 text-sm text-red-600">
-            {error}
-          </p>
-        )}
+      {!hasSubmitted && (
+        <form onSubmit={handleSubmit}>
+          <textarea
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="Write your answer here..."
+            rows={8}
+            disabled={loading}
+            className="w-full border border-black/10 rounded-lg p-4 outline-none focus:border-black/40 resize-y"
+          />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-4 bg-[#1f1b16] text-[#f3efe3] px-5 py-3 rounded-lg disabled:opacity-50"
-        >
-          {loading ? "Submitting..." : "Submit Exercise"}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-4 bg-[#1f1b16] text-[#f3efe3] px-5 py-3 rounded-lg disabled:opacity-50"
+          >
+            {loading ? "Submitting..." : "Submit Exercise"}
+          </button>
+        </form>
+      )}
 
       {submission && (
         <div className="mt-6 border-t border-black/10 pt-5">
-          <h3 className="font-medium">
-            Submission result
-          </h3>
+          <h3 className="font-medium">Submission result</h3>
 
-          <p className="mt-2 text-sm">
+          {submission.answer && (
+            <div className="mt-4">
+              <p className="text-xs uppercase tracking-wide text-black/40">
+                Your answer
+              </p>
+
+              <p className="mt-2 text-sm leading-6 whitespace-pre-wrap">
+                {submission.answer}
+              </p>
+            </div>
+          )}
+
+          <p className="mt-4 text-sm">
             Status:{" "}
             <strong>
-              {submission.is_completed
-                ? "Completed"
-                : "Not passed"}
+              {submission.is_completed ? "Completed" : "Not passed"}
             </strong>
           </p>
 
-          <p className="text-sm mt-1">
-            Score: {submission.score ?? 0} XP
-          </p>
+          <p className="text-sm mt-1">Score: {submission.score ?? 0} XP</p>
 
           {submission.feedback && (
             <div className="mt-4 bg-[#f3efe3] rounded-lg p-4">
@@ -137,9 +206,7 @@ export default function SubmitExercise({
                 Feedback
               </p>
 
-              <p className="mt-2 text-sm leading-6">
-                {submission.feedback}
-              </p>
+              <p className="mt-2 text-sm leading-6">{submission.feedback}</p>
             </div>
           )}
         </div>

@@ -75,3 +75,31 @@ def post_exercise(exercise_id):
         "message": "Exercise submitted successfully",
         "submission": submission.to_dict()
     }), 201
+    
+    
+@submitted.route('/submitted_exrecise/<string:exercise_id>', methods=['GET'])
+@jwt_required()
+def get_solved_exercise(exercise_id):
+    user_id = get_jwt_identity()
+
+    if not user_id:
+        return jsonify({
+            "message": "Not an authenticated user"
+        }), 401
+
+    exercise = Submit_Exercise.query.filter_by(
+        exercise_id=exercise_id,
+        user_id=user_id,
+        is_completed=True
+    ).first()
+
+    if not exercise:
+        return jsonify({
+            "message": "No completed submission found for this exercise"
+        }), 404
+
+    return jsonify({
+        "data": exercise.to_dict()
+    }), 200
+    
+        

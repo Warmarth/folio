@@ -64,13 +64,9 @@ export default function ExerciseDetailsPage() {
 
   return (
     <main className="min-h-screen bg-[#f3efe3] p-8">
-      <h1 className="text-3xl font-serif">
-        {exercise.title}
-      </h1>
+      <h1 className="text-3xl font-serif">{exercise.title}</h1>
 
-      <p className="mt-4">
-        {exercise.description}
-      </p>
+      <p className="mt-4">{exercise.description}</p>
 
       <button
         type="button"
@@ -79,14 +75,18 @@ export default function ExerciseDetailsPage() {
           setSubmitPage((p) => !p);
         }}
       >
-        {submitPage
-          ? "Close submission"
-          : "Click to submit your exercise"}
+        {submitPage ? "Close submission" : "Click to submit your exercise"}
       </button>
 
-      {submitPage && (
-        <SubmitExercise exerciseId={id} />
-      )}
+      {submitPage && <SubmitExercise exerciseId={id} />}
+      <button
+        onClick={() => {
+          window.location.href = "/dashboard";
+        }}
+        className="mb-6 text-sm text-black/50 hover:text-black"
+      >
+        ← Back to dashboard
+      </button>
     </main>
   );
 }

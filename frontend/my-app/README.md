@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Folio frontend
 
-## Getting Started
+The Folio web client is a [Next.js](https://nextjs.org/) 16 application for a practical developer-learning platform. It provides the landing page, account registration and sign-in, profiles, exercise browsing, and exercise submission views.
 
-First, run the development server:
+It connects to the Flask API in [`../../backend`](../../backend).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Requirements
+
+- Node.js 20.9 or later
+- npm
+- A running Folio API (by default, at `http://127.0.0.1:5000`)
+
+## Configuration
+
+Create a `.env.local` file in this directory:
+
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:5000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`NEXT_PUBLIC_API_URL` is exposed to the browser and must point to the API URL. The backend's CORS configuration permits `http://localhost:3000` and `http://127.0.0.1:3000` during local development.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+npm install
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000).
 
-To learn more about Next.js, take a look at the following resources:
+Other commands:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```powershell
+npm run lint
+npm run build
+npm run start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Application routes
 
-## Deploy on Vercel
+| Route | Purpose |
+| --- | --- |
+| `/` | Product landing page |
+| `/register` | Create an account through the API |
+| `/login` | Sign in and store the JWT in browser local storage |
+| `/me` | View and manage the signed-in profile |
+| `/dashboard` | View profiles |
+| `/dashboard/exercises` | Browse available exercises |
+| `/dashboard/exercises/[id]` | View and submit an exercise answer |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Authenticated API calls use the access token stored as `access_token` in local storage. Start the backend and create an account before trying protected dashboard features.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Technology
+
+- Next.js 16 and React 19
+- TypeScript
+- Tailwind CSS 4
+- ESLint
