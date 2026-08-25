@@ -94,7 +94,7 @@ def get_one_exercise(id):
     current_exe = Exercise.query.get_or_404(id)
     return jsonify({
         "data": current_exe.to_dict()
-    }),201
+    }),200
 
 @exercise.route('/all_exercise/<string:exercise_id>/update',methods=['PUT','PATCH'])
 @jwt_required()

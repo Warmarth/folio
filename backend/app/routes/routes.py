@@ -2,6 +2,7 @@ from flask import request,jsonify,Blueprint
 from app.database import db
 import base64
 from app.models import ProfileCard
+from app.models import User
 from flask_jwt_extended import get_jwt_identity,jwt_required
 
 api = Blueprint('api',__name__)
@@ -74,11 +75,20 @@ def create_profile_card():
 @jwt_required()
 def get_one():
     user_id = get_jwt_identity()
-    profile = ProfileCard.query.filter_by(user_id=user_id).first_or_404(description="user is not found")
-    return jsonify({"data": profile.to_dict()}), 200
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
 
+    profile = ProfileCard.query.filter_by(user_id=user_id).first()
+
+    return jsonify({
+        "email":user.email,
+        "profile": profile.to_dict() if profile else None
+        }), 200
 #=== read all ===
 @api.route('/all_profile',methods=["GET"])
+@jwt_required()
 def get_all_profile():
     page = request.args.get('page',1,type=int)
     per_page = request.args.get('per_page',10,type=int)
@@ -98,6 +108,14 @@ def get_all_profile():
         }
     }),200
     
+    
+@api.route('/all_profile/<string:profile_id>', methods=['GET'])
+def get_profile(profile_id):
+    profile = ProfileCard.query.get_or_404(profile_id,description="Profile not found")
+
+    return jsonify({
+        "data": profile.to_dict()
+    }), 200
     
 #=== update profile ===
 @api.route('/edit_profile', methods=['PATCH', 'PUT'])

@@ -6,6 +6,7 @@ from app.auth.routes import auth
 from app.routes.exercise_route import exercise
 from app.routes.submitted import submitted
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 def create_app(config_name='development'):
     app = Flask(__name__,instance_relative_config=True)
@@ -16,6 +17,21 @@ def create_app(config_name='development'):
     app.config['JWT_SECRET_KEY'] =  os.getenv('JWT_SECRET_KEY')
     
     jwt = JWTManager(app)
+    
+    CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": [
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
+            ]
+        }
+    },
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"]
+)
+
     
     db.init_app(app)
     app.register_blueprint(auth,url_prefix='/auth')
