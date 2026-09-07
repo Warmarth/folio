@@ -1,5 +1,5 @@
 import os
-from google import genai
+# from google import genai
 from groq import Groq
 from dotenv import load_dotenv
 import json

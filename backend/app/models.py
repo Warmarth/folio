@@ -127,6 +127,7 @@ class Submit_Exercise(db.Model):
             "exercise_id": self.exercise_id,
             "answer":self.answer,
             "score": self.score,
+            "feedback": self.feedback,
             'submitted_at':(self.submitted_at.isoformat() if self.submitted_at else None),
             "complete_at":(self.completed_at.isoformat() if self.completed_at else None),
             "is_completed":self.is_completed

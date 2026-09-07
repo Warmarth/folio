@@ -38,32 +38,31 @@ export default function DashboardPage() {
     loadProfile(token);
   }, [router]);
 
-async function loadProfile(token: string) {
-  try {
-    const response = await fetch(`${API_URL}/api/profile`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+  async function loadProfile(token: string) {
+    try {
+      const response = await fetch(`${API_URL}/api/profile`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    console.log("Profile response:", data);
+      console.log("Profile response:", data);
 
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to load profile");
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to load profile");
+      }
+
+      setUser({ email: data.email, ...(data.profile || {}) });
+    } catch (error) {
+      console.error("Profile error:", error);
+    } finally {
+      setLoading(false);
     }
-
-    setUser({email: data.email,...(data.profile || {}),});
-
-  } catch (error) {
-    console.error("Profile error:", error);
-  } finally {
-    setLoading(false);
   }
-}
   function logout() {
     localStorage.removeItem("access_token");
     router.push("/login");
@@ -80,57 +79,56 @@ async function loadProfile(token: string) {
       .join("");
   }
 
-async function createProfile(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
+  async function createProfile(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-  const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token");
 
-  if (!token) {
-    console.error("No token found");
-    return;
-  }
-
-  try {
-    setCreating(true);
-
-    const formData = new FormData();
-
-    formData.append("name", name);
-    formData.append("bio", bio);
-
-    if (image) {
-      formData.append("image", image);
+    if (!token) {
+      console.error("No token found");
+      return;
     }
 
-    const response = await fetch(`${API_URL}/api/create_profile`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+    try {
+      setCreating(true);
 
-    const data = await response.json();
+      const formData = new FormData();
 
-    console.log("Create profile response:", data);
+      formData.append("name", name);
+      formData.append("bio", bio);
 
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to create profile");
+      if (image) {
+        formData.append("image", image);
+      }
+
+      const response = await fetch(`${API_URL}/api/create_profile`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      console.log("Create profile response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create profile");
+      }
+
+      console.log("Profile created:", data);
+
+      setShowProfileForm(false);
+
+      // Get the newly created profile
+      await loadProfile(token);
+    } catch (error) {
+      console.error("Create profile error:", error);
+    } finally {
+      setCreating(false);
     }
-
-    console.log("Profile created:", data);
-
-    setShowProfileForm(false);
-
-    // Get the newly created profile
-    await loadProfile(token);
-
-  } catch (error) {
-    console.error("Create profile error:", error);
-  } finally {
-    setCreating(false);
   }
-}
 
   if (loading) {
     return (
@@ -146,22 +144,14 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
     return null;
   }
 
-  const fields = [
-    user.name,
-    user.email,
-    user.bio,
-    user.image,
-  ];
+  const fields = [user.name, user.email, user.bio, user.image];
 
   const completedFields = fields.filter(Boolean).length;
-  const profileCompletion = Math.round(
-    (completedFields / fields.length) * 100
-  );
+  const profileCompletion = Math.round((completedFields / fields.length) * 100);
 
   return (
     <main className="min-h-screen bg-[#171613] px-5 py-7 text-[#f3efe3] sm:px-8">
       <div className="mx-auto max-w-[1040px]">
-
         {/* TOP BAR */}
         <header className="mb-7 flex items-center justify-between border-b border-white/10 px-1 pb-5">
           <Link
@@ -193,47 +183,43 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
 
         {/* DASHBOARD GRID */}
         <div className="grid gap-5 md:grid-cols-[320px_1fr]">
-
           {/* PROFILE CARD */}
-       {showProfileForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-    <div className="bg-yellow-400 p-6 rounded-xl">
+          {showProfileForm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+              <div className="bg-yellow-400 p-6 rounded-xl">
+                <form
+                  onSubmit={createProfile}
+                  className="flex items-center justify-center flex-col"
+                >
+                  <h2>Create Profile</h2>
 
-      <form
-        onSubmit={createProfile}
-        className="flex items-center justify-center flex-col"
-      >
-        <h2>Create Profile</h2>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
 
-        <input
-          type="text"
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+                  <textarea
+                    placeholder="Tell us about yourself"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                  />
 
-        <textarea
-          placeholder="Tell us about yourself"
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-        />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImage(e.target.files?.[0] || null)}
+                  />
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] || null)}
-        />
-
-        <button type="submit" disabled={creating}>
-          {creating ? "Creating..." : "Create Profile"}
-        </button>
-      </form>
-
-    </div>
-          </div>
-            )}
+                  <button type="submit" disabled={creating}>
+                    {creating ? "Creating..." : "Create Profile"}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
           <section className="rounded bg-[#f3efe3] p-7 text-center text-[#1f1b16]">
-
             {/* Avatar */}
             <div className="mx-auto mb-4 flex h-[84px] w-[84px] items-center justify-center overflow-hidden rounded-full border border-black/10 bg-[#e4e0d2] font-serif text-[28px] text-black/40">
               {user.image ? (
@@ -264,7 +250,7 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
             </p>
 
             <button
-              onClick={() => setShowProfileForm((prev)=> !prev)}
+              onClick={() => setShowProfileForm((prev) => !prev)}
               className="mt-5 w-full rounded-sm bg-[#1f1b16] py-3 font-mono text-[11px] uppercase tracking-wider text-[#f3efe3] transition hover:bg-[#33291d]"
             >
               create profile
@@ -295,18 +281,25 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
               <span>Status</span>
               <span className="text-[#3e7c74]">Active</span>
             </div>
+            <div>
+              <button
+                onClick={() => {
+                  window.location.href = "/dashboard";
+                }}
+                className="mb-6 text-sm text-black/50 hover:text-black"
+              >
+                ← Back to dashboard
+              </button>
+            </div>
           </section>
 
           {/* RIGHT SIDE */}
           <div className="flex flex-col gap-5">
-
             {/* WELCOME */}
             <section className="rounded bg-[#f3efe3] p-7 text-[#1f1b16]">
               <h1 className="font-serif text-[24px] font-medium">
                 Welcome back
-                {user.name
-                  ? `, ${user.name.split(" ")[0]}`
-                  : ""}
+                {user.name ? `, ${user.name.split(" ")[0]}` : ""}
               </h1>
 
               <p className="mt-1.5 text-[13.5px] text-black/60">
@@ -316,7 +309,6 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
 
             {/* STATS */}
             <section className="grid gap-5 sm:grid-cols-3">
-
               <div className="rounded bg-[#f3efe3] p-5 text-[#1f1b16]">
                 <div className="font-serif text-[30px] font-medium text-[#3e7c74]">
                   {user.item_count ?? 0}
@@ -346,12 +338,10 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
                   Profile complete
                 </div>
               </div>
-
             </section>
 
             {/* RECENT WORK */}
             <section className="rounded bg-[#f3efe3] p-6 text-[#1f1b16]">
-
               <div className="flex items-baseline justify-between">
                 <h2 className="font-serif text-[17px] font-medium">
                   Recent work
@@ -365,7 +355,6 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
               <div className="my-4 h-px bg-black/10" />
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-
                 {/* Add project */}
                 <button
                   onClick={() => router.push("/projects/new")}
@@ -383,16 +372,13 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
                     FRAME {String(item).padStart(2, "0")}
                   </div>
                 ))}
-
               </div>
             </section>
-
           </div>
         </div>
 
         {/* QUICK ACTIONS */}
         <section className="mt-5 grid gap-5 sm:grid-cols-3">
-
           <button
             onClick={() => router.push("/exercises")}
             className="rounded bg-[#201f1b] p-5 text-left transition hover:bg-[#282721]"
@@ -401,9 +387,7 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
               01
             </span>
 
-            <h3 className="mt-3 font-serif text-lg">
-              Exercises
-            </h3>
+            <h3 className="mt-3 font-serif text-lg">Exercises</h3>
 
             <p className="mt-1 text-xs leading-relaxed text-white/45">
               Test your understanding with hands-on technical exercises.
@@ -418,9 +402,7 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
               02
             </span>
 
-            <h3 className="mt-3 font-serif text-lg">
-              Projects
-            </h3>
+            <h3 className="mt-3 font-serif text-lg">Projects</h3>
 
             <p className="mt-1 text-xs leading-relaxed text-white/45">
               Build projects and prove what you can actually do.
@@ -435,17 +417,13 @@ async function createProfile(e: React.FormEvent<HTMLFormElement>) {
               03
             </span>
 
-            <h3 className="mt-3 font-serif text-lg">
-              Code reviews
-            </h3>
+            <h3 className="mt-3 font-serif text-lg">Code reviews</h3>
 
             <p className="mt-1 text-xs leading-relaxed text-white/45">
               Get feedback on your code and improve your engineering skills.
             </p>
           </button>
-
         </section>
-
       </div>
     </main>
   );

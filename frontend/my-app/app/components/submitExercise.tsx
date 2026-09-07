@@ -117,6 +117,7 @@ export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
       }
 
       // GET endpoint returns { data: {...} }
+      console.log("Retrieved submission:", data.data);
       setSubmission(data.data);
       setHasSubmitted(true);
     } catch (error) {
@@ -131,7 +132,6 @@ export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
     get_exercise();
   }, [exerciseId]);
 
-  // While checking whether the user already submitted
   if (checkingSubmission) {
     return (
       <section className="mt-8 bg-white border border-black/10 rounded-lg p-6">
