@@ -1,8 +1,7 @@
 from flask import request,jsonify,Blueprint
 from app.database import db
 import base64
-from app.models import ProfileCard
-from app.models import User
+from app.models import MentorCard, ProfileCard,User
 from flask_jwt_extended import get_jwt_identity,jwt_required
 
 api = Blueprint('api',__name__)
@@ -213,3 +212,79 @@ def home():
         "message":"welcome to the de learner"  
     }),200
     
+
+@api.route('/mentors_create_profile', methods=['POST'])
+@jwt_required()
+def create_mentors_profiles():
+    access_token  = get_jwt_identity()
+    
+    if request.is_json:
+        name = request.json.get('name', '').strip()
+        bio = request.json.get('bio')
+        expertise = request.json.get('expertise')
+        image_b64 = request.json.get('image')  # base64 string
+        image_bytes = base64.b64decode(image_b64) if image_b64 else None
+        mimetype = request.json.get('image_mini')
+    else:
+        name = request.form.get('name', '').strip()
+        bio = request.form.get('bio')
+        expertise = request.form.get('expertise')
+        file = request.files.get('image')
+        image_bytes = file.read() if file else None
+        mimetype = file.mimetype if file else request.form.get('image_mini')
+    
+    if not name:
+        return jsonify({"error": "fields 'name' is required"}), 400
+    
+    # Prevent duplicates
+    if MentorCard.query.filter_by(user_id=access_token).first():
+        return jsonify({"error": "email already registered"}), 409
+    
+    file = request.files.get('image')
+    image_bytes = None
+    mimetype = None
+    
+    if file and file.filename:
+        # Size check (max 2 MB)
+        file.seek(0, 2)
+        size = file.tell()
+        file.seek(0)
+        
+        if size > 2 * 1024 * 1024:
+            return jsonify({"error": "image too large (max 2MB)"}), 400
+        
+        if not file.mimetype.startswith('image/'):
+            return jsonify({"error": "file must be an image"}), 400
+        
+        image_bytes = file.read()
+        mimetype = file.mimetype
+    
+    card = MentorCard(
+        user_id = access_token,
+        name=name,
+        bio=bio,
+        expertise=expertise,
+        image=image_bytes,
+        image_mini=mimetype
+    )
+    
+    db.session.add(card)
+    db.session.commit()
+    
+    return jsonify({'data': card.to_dict()}), 201
+
+@api.route('/mentors_profile',methods=['GET'])
+@jwt_required()
+def get_mentors_profile():
+    user_id = get_jwt_identity()
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    mentor = MentorCard.query.filter_by(user_id=user_id).first()
+
+    return jsonify({
+        "email":user.email,
+        "mentor": mentor.to_dict() if mentor else None
+        }), 200

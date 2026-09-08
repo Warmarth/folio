@@ -11,9 +11,11 @@ class User(db.Model):
     id =  db.Column(db.String(36),primary_key=True,default=lambda: str(uuid.uuid4()))
     email = db.Column(db.String(200),nullable=False,unique=True)
     password_hash = db.Column(db.String(255),nullable=False)
+    role = db.Column(db.String(20),nullable=False,default="learner")
     created_at = db.Column(db.DateTime,default=lambda:datetime.now(timezone.utc))
-    # retationship with other tables
+    # relationship with other tables
     profile = db.relationship("ProfileCard",back_populates="user",uselist=False)
+    mentor = db.relationship("MentorCard",back_populates="user",uselist=False)    
     exercises_created = db.relationship("Exercise",back_populates="creator",lazy="dynamic")
     submissions = db.relationship("Submit_Exercise",back_populates="user",lazy="dynamic")
     progress = db.relationship("ExerciseProgress",back_populates="user",lazy="dynamic")
@@ -37,6 +39,7 @@ class ProfileCard(db.Model):
             "name":self.name,
             "email":self.user.email,
             "bio":self.bio,
+            "role":self.user.role,
             "image":None,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
@@ -46,6 +49,35 @@ class ProfileCard(db.Model):
             
         return data
 
+class MentorCard(db.Model):
+    __tablename__ = 'mentor'
+    
+    id = db.Column(db.String(36),primary_key=True,default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36),db.ForeignKey("user.id"),nullable=False,unique=True)
+    name = db.Column(db.String(200),nullable=False)
+    bio = db.Column(db.String(500),nullable=True)
+    expertise = db.Column(db.String(500),nullable=True)
+    image = db.Column(db.LargeBinary(500),nullable=True) 
+    image_mini = db.Column(db.String(500),nullable=True) 
+    created_at = db.Column(db.DateTime,default=lambda:datetime.now(timezone.utc))
+    user = db.relationship('User',back_populates='mentor')
+    
+    def to_dict(self):
+        data = {
+            "id":self.id,
+            "name":self.name,
+            "email":self.user.email,
+            "bio":self.bio,
+            "expertise":self.expertise,
+            "role":self.user.role,
+            "image":None,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+        if self.image:
+            b64 = base64.b64encode(self.image).decode('utf-8')
+            data["image"] = f"data:{self.image_mini}; base64,{b64}" if self.image_mini else b64
+            
+        return data
 
 # This model hold the data for the different exercise and some infomation about them
 class Exercise(db.Model):

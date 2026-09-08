@@ -33,6 +33,7 @@ export default function UserProfilePage() {
         const response = await fetch(`${API_URL}/api/all_profile/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
 

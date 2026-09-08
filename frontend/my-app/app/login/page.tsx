@@ -9,6 +9,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // const [role, setRole] = useState("learner");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,6 +28,7 @@ async function handleLogin(event: FormEvent<HTMLFormElement>) {
       body: JSON.stringify({
         email,
         password,
+        // role,
       }),
     });
 
@@ -34,7 +36,7 @@ async function handleLogin(event: FormEvent<HTMLFormElement>) {
 
     const data = await response.json();
 
-    console.log("Backend response:", data);
+    // console.log("Backend response:", data);
 
     if (!response.ok) {
       setError(data.message || "Login failed");
@@ -42,10 +44,12 @@ async function handleLogin(event: FormEvent<HTMLFormElement>) {
     }
 
     localStorage.setItem("access_token", data.access_token);
-
-    console.log("Token saved:", data.access_token);
-
-    router.push("/me");
+    localStorage.setItem("role", data.role);
+    if (data.role !== "mentor") {
+      router.push("/me");
+    }else {
+      router.push("/mentor/dashboard");
+    }
   } catch (error) {
     console.error("LOGIN ERROR:", error);
     setError("Could not connect to the server.");

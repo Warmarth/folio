@@ -9,6 +9,7 @@ export default function RegisterPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("learner");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,52 +18,54 @@ export default function RegisterPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   async function handleRegister(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    console.log("api url:" ,API_URL)
-    setError("");
-    setSuccess("");
-    setLoading(true);
+  event.preventDefault();
 
-    try {
-      const response = await fetch(
-        `${API_URL}/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-            password,
-          }),
-        }
-      );
-      
+  console.log("API URL:", API_URL);
+
+  setError("");
+  setSuccess("");
+  setLoading(true);
+
+  try {
+
+   const response = await fetch(`${API_URL}/auth/register`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    email: email.trim(),
+    password,
+    role,
+  }),
+});
+
     console.log("Status:", response.status);
 
-      const data = await response.json();
-    
-      console.log("Backend response:", data);
+    const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.message || "Could not create account.");
-        return;
-      }
+    console.log("Backend response:", data);
 
-      setSuccess(data.message || "Account created successfully.");
-
-      setTimeout(() => {
-        router.push("/login");
-      }, 1000);
-    } catch {
-      setError(
-        "Could not connect to the server. Make sure the backend is running."
-      );
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      setError(data.message || "Could not create account.");
+      return;
     }
-  }
 
+    setSuccess(data.message || "Account created successfully.");
+
+    setTimeout(() => {
+      router.push("/login");
+    }, 1000);
+  } catch (error) {
+    console.error("Registration error:", error);
+
+    setError(
+      "Could not connect to the server. Make sure the backend is running."
+    );
+  } finally {
+    setLoading(false);
+  }
+}
   return (
     <main className="min-h-screen bg-[#171613] px-5 py-8 text-[#f3efe3]">
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-4xl overflow-hidden rounded-md border border-white/10 bg-[#201f1b] md:grid-cols-[0.85fr_1fr]">
@@ -171,6 +174,24 @@ export default function RegisterPage() {
               />
             </div>
 
+            <div>
+              <label
+                htmlFor="role"
+                className="mb-2 block font-mono text-[10px] uppercase tracking-widest text-black/50"
+              >
+                Role
+              </label>
+              <select
+                id="role"
+                value={role}
+                onChange={(event) => setRole(event.target.value)}
+                className="w-full rounded-sm border border-black/10 bg-[#fbfaf5] px-3 py-3 text-sm outline-none transition focus:border-[#3e7c74] focus:ring-2 focus:ring-[#3e7c74]/15"
+              >
+                <option value="learner">Learner</option>
+                <option value="mentor">Mentor</option>
+              </select>
+            </div>
+
             {error && (
               <div className="rounded-sm border border-[#c1553d]/20 bg-[#c1553d]/10 px-3 py-3 font-mono text-xs text-[#c1553d]">
                 {error}
@@ -206,3 +227,4 @@ export default function RegisterPage() {
     </main>
   );
 }
+            

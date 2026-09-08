@@ -1,6 +1,6 @@
 from flask import request,jsonify,Blueprint
 from app.database import db
-from app.models import Exercise,ProfileCard
+from app.models import Exercise,ProfileCard,MentorCard
 from flask_jwt_extended import jwt_required,get_jwt_identity
 
 #creating the skeleton name for the exercise api
@@ -19,7 +19,7 @@ def create_exercise():
     }
     
     user_id = get_jwt_identity()
-    profile = ProfileCard.query.filter_by(user_id=user_id).first()
+    profile = MentorCard.query.filter_by(user_id=user_id).first()
     
     if not profile:
         return jsonify({
