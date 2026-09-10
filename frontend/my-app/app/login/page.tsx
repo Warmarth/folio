@@ -9,7 +9,6 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [role, setRole] = useState("learner");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,6 +17,8 @@ export default function LoginPage() {
 
 async function handleLogin(event: FormEvent<HTMLFormElement>) {
   event.preventDefault();
+
+  setLoading(true);
 
   try {
     const response = await fetch(`${API_URL}/auth/login`, {
@@ -28,7 +29,6 @@ async function handleLogin(event: FormEvent<HTMLFormElement>) {
       body: JSON.stringify({
         email,
         password,
-        // role,
       }),
     });
 
@@ -53,6 +53,8 @@ async function handleLogin(event: FormEvent<HTMLFormElement>) {
   } catch (error) {
     console.error("LOGIN ERROR:", error);
     setError("Could not connect to the server.");
+  }finally{
+    setLoading(false)
   }
 }
 

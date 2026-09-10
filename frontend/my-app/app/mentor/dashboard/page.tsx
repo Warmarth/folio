@@ -58,10 +58,12 @@ export default function MentorDashboard() {
         );
         if (!res.ok) throw new Error(`Submissions fetch failed: ${res.status}`);
         const data = await res.json();
-        console.log(data.data)
+        console.log(data.data);
         setSubmitted(data.data || []);
       } catch (err) {
         console.error("Error loading submissions:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -147,27 +149,14 @@ export default function MentorDashboard() {
               </div>
 
               <div className="space-y-5">
-                {
-                  submitted
-                }
-
-                <Activity
-                  icon={<CheckCircle2 size={18} />}
-                  text="Sarah submitted Python Functions"
-                  time="1 hour ago"
-                />
-
-                <Activity
-                  icon={<Clock3 size={18} />}
-                  text="Mike started SQL Basics"
-                  time="2 hours ago"
-                />
-
-                <Activity
-                  icon={<CheckCircle2 size={18} />}
-                  text="David scored 92% on Git & GitHub"
-                  time="4 hours ago"
-                />
+                {submitted?.map((submit: any) => (
+                  <Activity
+                    key={submit.id}
+                    icon={<CheckCircle2 size={18} />}
+                    text={`${submit.user_name} submitted ${submit.exercise_name}`}
+                    time={submit.submitted_at}
+                  />
+                ))}
               </div>
             </section>
           </div>

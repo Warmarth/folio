@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const API_URL = "http://127.0.0.1:5000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Submission = {
   id?: string;
@@ -63,8 +63,6 @@ export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
         setError(data.message || "Failed to submit exercise.");
         return;
       }
-
-      // POST endpoint returns { submission: {...} }
       setSubmission(data.submission);
 
       // The user now has a submission
@@ -103,8 +101,7 @@ export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
       );
 
       const data = await response.json();
-
-      // 404 means the user has not submitted this exercise yet.
+      
       if (response.status === 404) {
         setSubmission(null);
         setHasSubmitted(false);
@@ -115,9 +112,6 @@ export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
         setError(data.message || "Failed to retrieve exercise submission.");
         return;
       }
-
-      // GET endpoint returns { data: {...} }
-      console.log("Retrieved submission:", data.data);
       setSubmission(data.data);
       setHasSubmitted(true);
     } catch (error) {
