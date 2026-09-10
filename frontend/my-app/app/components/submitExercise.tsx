@@ -93,7 +93,7 @@ export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
       setError("");
 
       const response = await fetch(
-        `${API_URL}/api/submit/submitted_exrecise/${exerciseId}`,
+        `${API_URL}/api/submit/submitted_exercise/${exerciseId}`,
         {
           method: "GET",
           headers: {

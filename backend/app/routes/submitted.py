@@ -1,6 +1,7 @@
 from flask import request,jsonify,Blueprint
+from sqlalchemy.orm import joinedload
 from app.database import db
-from app.models import Exercise,ProfileCard,Submit_Exercise
+from app.models import Exercise,ProfileCard,Submit_Exercise,User
 from flask_jwt_extended import get_jwt_identity,jwt_required
 from app.eveluator.ai_evaluator import evaluator_ai
 
@@ -77,7 +78,7 @@ def post_exercise(exercise_id):
     }), 201
     
     
-@submitted.route('/submitted_exrecise/<string:exercise_id>', methods=['GET'])
+@submitted.route('/submitted_exercise/<string:exercise_id>', methods=['GET'])
 @jwt_required()
 def get_solved_exercise(exercise_id):
     user_id = get_jwt_identity()
@@ -102,4 +103,28 @@ def get_solved_exercise(exercise_id):
         "data": exercise.to_dict()
     }), 200
     
-        
+
+@submitted.route('/submitted_exercise', methods=['GET'])
+@jwt_required()
+def mentor_get_submitted_exercise():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    per_page = min(per_page, 50)
+
+    pagination = Submit_Exercise.query.options(
+        joinedload(Submit_Exercise.user).joinedload(User.profile)
+    ).order_by(
+        Submit_Exercise.submitted_at.desc()
+    ).paginate(page=page, per_page=per_page, error_out=False)
+
+    return jsonify({
+        "data": [s.to_dict() for s in pagination.items],
+        "pagination": {
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_prev": pagination.has_prev
+        }
+    }), 200

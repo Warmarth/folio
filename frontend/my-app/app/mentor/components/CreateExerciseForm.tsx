@@ -33,7 +33,7 @@ export default function CreateExerciseForm() {
       setLoading(false);
       return;
     }
-
+    const pattern = `${description.trim()} ${category} ${instructions.trim()} ${evaluationCriteria.trim()}`;
     try {
       const response = await fetch(
         `${API_URL}/api/exercises/create_exercise`,
@@ -45,11 +45,8 @@ export default function CreateExerciseForm() {
           },
           body: JSON.stringify({
             title: title.trim(),
-            description: description.trim(),
-            category,
-            difficulty,
-            instructions: instructions.trim(),
-            evaluation_criteria: evaluationCriteria.trim(),
+            description: pattern,
+            level: difficulty,
           }),
         }
       );
@@ -160,9 +157,11 @@ export default function CreateExerciseForm() {
               onChange={(e) => setDifficulty(e.target.value)}
               className="w-full rounded-lg border bg-white px-4 py-3 outline-none focus:border-black"
             >
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
+              <option value="easy">easy</option>
+              <option value="medium">medium</option>
+              <option value="hard">hard</option>
+              <option value="expert">expert</option>
+              <option value="possible">Possible</option>
             </select>
           </div>
         </div>

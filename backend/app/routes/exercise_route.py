@@ -172,3 +172,25 @@ def delete_exercise(exercise_id):
     return jsonify({
         "message":f"succsefully deleted {exercise_title}"
     }),204
+    
+@exercise.route('/all_exercise/mentor',methods=['GET'])
+@jwt_required()
+def get_exercises_by_mentor():
+    user_id = get_jwt_identity()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    per_page = min(per_page, 50)
+
+    pagination = Exercise.query.filter_by(created_by=user_id).order_by(Exercise.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    return {
+        "data": [exercise.to_dict() for exercise in pagination.items],
+        "pagination": {
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_prev": pagination.has_prev
+        }
+    }

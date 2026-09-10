@@ -156,6 +156,7 @@ class Submit_Exercise(db.Model):
         data = {
             "id": self.id,
             "user_id":self.user_id,
+            "user_name": ( self.user.profile.name if self.user and self.user.profile else None),
             "exercise_id": self.exercise_id,
             "answer":self.answer,
             "score": self.score,

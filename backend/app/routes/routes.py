@@ -89,14 +89,16 @@ def get_one():
 @api.route('/all_profile',methods=["GET"])
 @jwt_required()
 def get_all_profile():
+    user_id = get_jwt_identity()
     page = request.args.get('page',1,type=int)
     per_page = request.args.get('per_page',10,type=int)
     
     per_page = min(per_page,50)
     
     pagination = ProfileCard.query.order_by(ProfileCard.created_at.desc()).paginate(page=page,per_page=per_page,error_out=False)
+    profiles = [profile for profile in pagination.items if profile.user_id != user_id]
     return jsonify({
-        "data":[profile.to_dict() for profile in pagination.items],
+        "data":[profile.to_dict() for profile in profiles],
         "pagination":{
             "page":pagination.page,
             "per_page":pagination.per_page,
@@ -288,3 +290,31 @@ def get_mentors_profile():
         "email":user.email,
         "mentor": mentor.to_dict() if mentor else None
         }), 200
+    
+@api.route('/all_mentors',methods=['GET'])
+@jwt_required()
+def get_all_mentors():
+    page = request.args.get('page',1,type=int)
+    per_page = request.args.get('per_page',10,type=int)
+    
+    per_page = min(per_page,50)
+    
+    pagination = MentorCard.query.order_by(MentorCard.created_at.desc()).paginate(page=page,per_page=per_page,error_out=False)
+    mentors = [mentor for mentor in pagination.items]
+    return jsonify({
+        "data":[mentor.to_dict() for mentor in mentors],
+        "pagination":{
+            "page":pagination.page,
+            "per_page":pagination.per_page,
+            "total":pagination.total,
+            "pages":pagination.pages,
+            "has_next":pagination.has_next,
+            "has_prev":pagination.has_prev
+        }
+    }),200
+
+@api.route('/all_mentors/<string:mentor_id>', methods=['GET'])
+@jwt_required()
+def get_mentors_profile_by_id(mentor_id):
+    mentor = MentorCard.query.get_or_404(mentor_id,description="Mentor not found")
+    return jsonify({"data": mentor.to_dict()}), 200
