@@ -59,7 +59,7 @@ const ExercisesPage = () => {
 
       <div className="grid grid-cols-1 gap-4">
         {exercises.length > 0 ? (
-          exercises.map((exercise) => (
+          exercises.map((exercise:any) => (
             <div key={exercise.id} onClick={() => window.location.href = `/mentor/exercises/${exercise.id}`}>
               <Exercise
                 key={exercise.id}

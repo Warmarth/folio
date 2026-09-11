@@ -38,7 +38,7 @@ export default function MentorshipDetailsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         const data = await response.json();
@@ -71,11 +71,9 @@ export default function MentorshipDetailsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <>
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-6 text-2xl font-bold">
-          Mentor Profile
-        </h1>
+        <h1 className="mb-6 text-2xl font-bold">Mentor Profile</h1>
 
         {mentor.name ? (
           <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
@@ -88,31 +86,23 @@ export default function MentorshipDetailsPage() {
             )}
 
             <div className="p-6">
-              <h2 className="text-2xl font-bold">
-                {mentor.name}
-              </h2>
+              <h2 className="text-2xl font-bold">{mentor.name}</h2>
 
               {mentor.email && (
-                <p className="mt-1 text-gray-500">
-                  {mentor.email}
-                </p>
+                <p className="mt-1 text-gray-500">{mentor.email}</p>
               )}
 
               {mentor.bio && (
                 <div className="mt-6">
                   <h3 className="font-semibold">About</h3>
-                  <p className="mt-2 text-gray-600">
-                    {mentor.bio}
-                  </p>
+                  <p className="mt-2 text-gray-600">{mentor.bio}</p>
                 </div>
               )}
 
               {mentor.expertise && (
                 <div className="mt-6">
                   <h3 className="font-semibold">Expertise</h3>
-                  <p className="mt-2 text-gray-600">
-                    {mentor.expertise}
-                  </p>
+                  <p className="mt-2 text-gray-600">{mentor.expertise}</p>
                 </div>
               )}
 
@@ -127,6 +117,6 @@ export default function MentorshipDetailsPage() {
           </div>
         )}
       </div>
-    </main>
+    </>
   );
 }

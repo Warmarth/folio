@@ -37,6 +37,11 @@ export default function MentorLayout({
     getUserInfo();
   }, []);
 
+  function logout() {
+    localStorage.removeItem("access_token");
+    router.push("/login");
+  }
+
   async function getUserInfo() {
     const token = localStorage.getItem("access_token");
 
@@ -88,35 +93,35 @@ export default function MentorLayout({
           <NavItem
             icon={<BookOpen size={19} />}
             label="Exercises"
-            active={pathname?.startsWith("/mentor/exercises")}
+            active={pathname === "/mentor/exercises"}
             onClick={() => router.push("/mentor/exercises")}
           />
 
           <NavItem
             icon={<FileText size={19} />}
             label="Submissions"
-            active={pathname?.startsWith("/mentor/submissions")}
+            active={pathname === "/mentor/submissions"}
             onClick={() => router.push("/mentor/submissions")}
           />
 
           <NavItem
             icon={<Users size={19} />}
             label="Learners"
-            active={pathname?.startsWith("/mentor/learners")}
+            active={pathname === "/mentor/learners"}
             onClick={() => router.push("/mentor/learners")}
           />
 
           <NavItem
             icon={<BarChart3 size={19} />}
             label="Performance"
-            active={pathname?.startsWith("/mentor/performance")}
+            active={pathname === "/mentor/performance"}
             onClick={() => router.push("/mentor/performance")}
           />
 
           <NavItem
             icon={<Settings size={19} />}
             label="Settings"
-            active={pathname?.startsWith("/mentor/settings")}
+            active={pathname === "/mentor/settings"}
             onClick={() => router.push("/mentor/settings")}
           />
         </nav>
@@ -143,6 +148,12 @@ export default function MentorLayout({
             {userInfo?.mentor?.email || "mentor@example.com"}
           </p>
         </div>
+        <button
+          onClick={logout}
+          className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+        >
+          Sign out
+        </button>
       </aside>
 
       {/* Main area */}
@@ -162,6 +173,7 @@ export default function MentorLayout({
             >
               + Create Exercise
             </button>
+           
           </div>
         </header>
 

@@ -6,18 +6,20 @@ import {
   Users,
   BarChart3,
   CheckCircle2,
-  Clock3,
 } from "lucide-react";
 import StatCard from "../components/StatCard";
 import Exercise from "../components/Exercise";
 import Activity from "../components/Activty";
 import Submission from "../components/submission";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function MentorDashboard() {
   const [exercises, setExercises] = useState<any>([]);
   const [submitted, setSubmitted] = useState<any>([]);
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter()
 
   useEffect(() => {
     async function loadExercises() {
@@ -70,6 +72,7 @@ export default function MentorDashboard() {
     loadExercises();
     loadSubmissions();
   }, []);
+
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">

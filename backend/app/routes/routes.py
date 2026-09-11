@@ -318,3 +318,26 @@ def get_all_mentors():
 def get_mentors_profile_by_id(mentor_id):
     mentor = MentorCard.query.get_or_404(mentor_id,description="Mentor not found")
     return jsonify({"data": mentor.to_dict()}), 200
+
+
+@api.route('/all_learner',methods=['GET'])
+@jwt_required()
+def all_learners():
+    page = request.args.get('page',1,type=int)
+    per_page = request.args.get('per_page',10,type=int)
+    per_page = min(per_page,50)
+    
+    pagination = ProfileCard.query.order_by(ProfileCard.created_at.desc()).paginate(page=page,per_page=per_page,error_out=False)
+    
+    learners = [learner for learner in pagination.items]
+    return jsonify({
+            "data":[learner.to_dict() for learner in learners],
+            "pagination":{
+                "page":pagination.page,
+                "per_page":pagination.per_page,
+                "total":pagination.total,
+                "pages":pagination.pages,
+                "has_next":pagination.has_next,
+                "has_prev":pagination.has_prev
+            }
+        }),200

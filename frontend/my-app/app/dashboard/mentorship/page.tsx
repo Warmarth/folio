@@ -64,7 +64,7 @@ export default function MentorshipPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <>
       <div className="mx-auto max-w-6xl">
         <h1 className="mb-2 text-2xl font-bold">Find a Mentor</h1>
 
@@ -126,6 +126,6 @@ export default function MentorshipPage() {
           </div>
         )}
       </div>
-    </main>
+    </>
   );
 }
