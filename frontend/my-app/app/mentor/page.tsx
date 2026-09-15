@@ -47,25 +47,45 @@ export default function MentorRegisterPage() {
     setLoading(true);
 
     try {
-      const formData = new FormData();
+      let image_url: string | undefined;
 
-      formData.append("name", name.trim());
-      formData.append("email", email.trim());
-      formData.append("bio", bio.trim());
-      formData.append("expertise", expertise.trim());
-
+      // step 1: if an image was picked, upload it first and get back its URL
       if (image) {
-        formData.append("image", image);
+        const imageFormData = new FormData();
+        imageFormData.append("image", image);
+
+        const uploadResponse = await fetch(`${API_URL}/api/upload_image`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: imageFormData,
+        });
+
+        const uploadData = await uploadResponse.json();
+
+        if (!uploadResponse.ok) {
+          throw new Error(uploadData.error || "Failed to upload image");
+        }
+
+        image_url = uploadData.image_url;
       }
 
+      // step 2: create the mentor profile with the resulting image_url (if any)
       const response = await fetch(
         `${API_URL}/api/mentors_create_profile`,
         {
           method: "POST",
-          body: formData,
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            name: name.trim(),
+            bio: bio.trim(),
+            expertise: expertise.trim(),
+            image_url,
+          }),
         }
       );
 
@@ -73,7 +93,7 @@ export default function MentorRegisterPage() {
 
       if (!response.ok) {
         setError(
-          data.message || "Failed to create mentor account."
+          data.error || data.message || "Failed to create mentor account."
         );
         return;
       }

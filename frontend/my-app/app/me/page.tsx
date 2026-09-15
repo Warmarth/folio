@@ -2,27 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import CreateEditComponent from "../components/createProfile";
 import Link from "next/link";
 
 type UserProfile = {
   name?: string;
   email?: string;
   bio?: string;
-  image?: string;
+  image_url?: string;
   created_at?: string;
   item_count?: number;
   view_count?: number;
 };
+
+type EditMethod = "PATCH" | "PUT";
+type ProfileMode = "create" | "edit";
+const editMethod: EditMethod = "PATCH";
 
 export default function DashboardPage() {
   const router = useRouter();
 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [showProfileForm, setShowProfileForm] = useState(false);
+  const [showProfileEditForm, setShowProfileEditForm] = useState(false);
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -79,54 +86,101 @@ export default function DashboardPage() {
       .join("");
   }
 
-  async function createProfile(e: React.FormEvent<HTMLFormElement>) {
+  async function saveProfile(
+    e: React.FormEvent<HTMLFormElement>,
+    mode: ProfileMode,
+  ) {
     e.preventDefault();
 
     const token = localStorage.getItem("access_token");
 
-    if (!token) {
-      console.error("No token found");
-      return;
-    }
+    if (!token) return;
 
     try {
-      setCreating(true);
+      setCreating(mode === "create");
+      setEditing(mode === "edit");
 
-      const formData = new FormData();
+      let imageUrl = "";
 
-      formData.append("name", name);
-      formData.append("bio", bio);
-
+      // Upload new image if selected
       if (image) {
+        const formData = new FormData();
         formData.append("image", image);
+
+        const uploadResponse = await fetch(`${API_URL}/api/upload_image`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        const uploadData = await uploadResponse.json();
+
+        if (!uploadResponse.ok) {
+          throw new Error(uploadData.error || "Failed to upload image");
+        }
+
+        imageUrl = uploadData.image_url;
       }
 
-      const response = await fetch(`${API_URL}/api/create_profile`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      // CREATE
+      if (mode === "create") {
+        const response = await fetch(`${API_URL}/api/create_profile`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            bio,
+            image_url: imageUrl,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      console.log("Create profile response:", data);
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to create profile");
+        }
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create profile");
+        console.log("Profile created:", data);
       }
 
-      console.log("Profile created:", data);
+      // EDIT
+      if (mode === "edit") {
+        const response = await fetch(`${API_URL}/api/edit_profile`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            bio,
+            ...(imageUrl && { image_url: imageUrl }),
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to edit profile");
+        }
+
+        console.log("Profile edited:", data);
+      }
 
       setShowProfileForm(false);
+      setShowProfileEditForm(false);
 
-      // Get the newly created profile
       await loadProfile(token);
     } catch (error) {
-      console.error("Create profile error:", error);
+      console.error("Profile error:", error);
     } finally {
       setCreating(false);
+      setEditing(false);
     }
   }
 
@@ -144,7 +198,7 @@ export default function DashboardPage() {
     return null;
   }
 
-  const fields = [user.name, user.email, user.bio, user.image];
+  const fields = [user.name, user.email, user.bio, user.image_url];
 
   const completedFields = fields.filter(Boolean).length;
   const profileCompletion = Math.round((completedFields / fields.length) * 100);
@@ -184,47 +238,41 @@ export default function DashboardPage() {
         {/* DASHBOARD GRID */}
         <div className="grid gap-5 md:grid-cols-[320px_1fr]">
           {/* PROFILE CARD */}
+
           {showProfileForm && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-              <div className="bg-yellow-400 p-6 rounded-xl">
-                <form
-                  onSubmit={createProfile}
-                  className="flex items-center justify-center flex-col"
-                >
-                  <h2>Create Profile</h2>
-
-                  <input
-                    type="text"
-                    placeholder="Your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-
-                  <textarea
-                    placeholder="Tell us about yourself"
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                  />
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImage(e.target.files?.[0] || null)}
-                  />
-
-                  <button type="submit" disabled={creating}>
-                    {creating ? "Creating..." : "Create Profile"}
-                  </button>
-                </form>
-              </div>
-            </div>
+            <CreateEditComponent
+              onClick={() => setShowProfileForm(false)}
+              onSubmit={(e) => saveProfile(e, "create")}
+              name={name}
+              setName={setName}
+              bio={bio}
+              setBio={setBio}
+              image={image}
+              setImage={setImage}
+              creating={creating}
+              mode="create"
+            />
+          )}
+          {showProfileEditForm && (
+            <CreateEditComponent
+              onClick={() => setShowProfileEditForm(false)}
+              onSubmit={(e) => saveProfile(e, "edit")}
+              name={name}
+              setName={setName}
+              bio={bio}
+              setBio={setBio}
+              image={image}
+              setImage={setImage}
+              creating={editing}
+              mode="edit"
+            />
           )}
           <section className="rounded bg-[#f3efe3] p-7 text-center text-[#1f1b16]">
             {/* Avatar */}
             <div className="mx-auto mb-4 flex h-[84px] w-[84px] items-center justify-center overflow-hidden rounded-full border border-black/10 bg-[#e4e0d2] font-serif text-[28px] text-black/40">
-              {user.image ? (
+              {user.image_url ? (
                 <img
-                  src={user.image}
+                  src={user.image_url}
                   alt={user.name || "Profile photo"}
                   className="h-full w-full object-cover"
                 />
@@ -256,7 +304,7 @@ export default function DashboardPage() {
               create profile
             </button>
             <button
-              onClick={() => router.push("/edit_profile")}
+              onClick={() => setShowProfileEditForm((prev) => !prev)}
               className="mt-5 w-full rounded-sm bg-[#1f1b16] py-3 font-mono text-[11px] uppercase tracking-wider text-[#f3efe3] transition hover:bg-[#33291d]"
             >
               Edit profile
@@ -292,7 +340,6 @@ export default function DashboardPage() {
               </button>
             </div>
           </section>
-
           {/* RIGHT SIDE */}
           <div className="flex flex-col gap-5">
             {/* WELCOME */}

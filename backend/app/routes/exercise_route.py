@@ -1,6 +1,6 @@
 from flask import request,jsonify,Blueprint
 from app.database import db
-from app.models import Exercise,ProfileCard,MentorCard
+from app.models import Exercise, User, RoleEnum, LevelEnum
 from flask_jwt_extended import jwt_required,get_jwt_identity
 
 #creating the skeleton name for the exercise api
@@ -19,11 +19,11 @@ def create_exercise():
     }
     
     user_id = get_jwt_identity()
-    profile = MentorCard.query.filter_by(user_id=user_id).first()
-    
-    if not profile:
+    user = User.query.get(user_id)
+
+    if not user or user.role != RoleEnum.mentor:
         return jsonify({
-            "message": "you must have a profile to create an exercise"
+            "message": "you must have a mentor profile to create an exercise"
         }), 403
         
     if not request.is_json:
@@ -53,7 +53,7 @@ def create_exercise():
     exe_card  = Exercise(
         title = title,
         description = description,
-        level = level,
+        level = LevelEnum(level),
         xp_points = xp_points,
         created_by = user_id
     )
@@ -141,7 +141,7 @@ def update_exercise(exercise_id):
             return jsonify({
             "message": "Invalid level"
         }), 400
-        current_exe.level =  level
+        current_exe.level =  LevelEnum(level)
         current_exe.xp_points = xp_map[level]
         updated = True
     

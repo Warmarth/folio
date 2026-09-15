@@ -1,7 +1,7 @@
 import bcrypt
 from flask import request,jsonify,Blueprint
 from app.database import db
-from app.models import User
+from app.models import User, RoleEnum
 from flask_jwt_extended import create_access_token
 
 auth = Blueprint("auth",__name__)
@@ -46,7 +46,7 @@ def register():
     user = User(
         email=email,
         password_hash=password_hash,
-        role=role
+        role=RoleEnum(role)
     )
 
     db.session.add(user)
@@ -55,6 +55,8 @@ def register():
     return jsonify({
         "message": f"{role} successfully created!"
     }), 201
+    
+    
 @auth.route("/login",methods=['POST'])
 def login():
     user_data = request.get_json()
@@ -87,7 +89,7 @@ def login():
         return jsonify({
             "message": "invalid email or password"
         }),401
-    role = already_exist.role
+    role = already_exist.role.value
     access_token = create_access_token(
         identity= already_exist.id
     )
@@ -97,5 +99,3 @@ def login():
         "access_token": access_token,
         "role": role
     }),200
-    
-    

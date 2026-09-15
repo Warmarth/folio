@@ -48,7 +48,7 @@ async function handleLogin(event: FormEvent<HTMLFormElement>) {
     if (data.role !== "mentor") {
       router.push("/me");
     }else {
-      router.push("/mentor/dashboard");
+      router.push("/mentor");
     }
   } catch (error) {
     console.error("LOGIN ERROR:", error);

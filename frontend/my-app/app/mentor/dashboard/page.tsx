@@ -197,24 +197,6 @@ export default function MentorDashboard() {
                     exercise="REST API Fundamentals"
                     score="85%"
                   />
-
-                  <Submission
-                    learner="Sarah Kim"
-                    exercise="Python Functions"
-                    score="92%"
-                  />
-
-                  <Submission
-                    learner="Mike Johnson"
-                    exercise="SQL Basics"
-                    score="71%"
-                  />
-
-                  <Submission
-                    learner="David Smith"
-                    exercise="Git & GitHub"
-                    score="88%"
-                  />
                 </tbody>
               </table>
             </div>

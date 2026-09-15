@@ -15,11 +15,11 @@ import NavItem from "./components/NavItem";
 interface UserInfo {
   name?: string;
   email?: string;
-  image?: string;
-  mentor?: {
+  image_url?: string;
+  profile?: {
     name?: string;
-    email?: string;
-    image?: string;
+    bio?: string;
+    image_url?: string;
   };
 }
 
@@ -68,6 +68,7 @@ export default function MentorLayout({
       }
 
       setUserInfo(data);
+      console.log(data);
     } catch (error) {
       console.error("Error fetching mentor:", error);
     }
@@ -129,23 +130,23 @@ export default function MentorLayout({
         {/* Mentor profile */}
         <div className="absolute bottom-5 left-5 right-5 rounded-xl bg-gray-100 p-4">
           <div className="mb-3">
-            {userInfo?.mentor?.image ? (
+            {userInfo?.profile?.image_url ? (
               <img
-                src={userInfo.mentor.image}
+                src={userInfo.profile.image_url}
                 alt="Mentor"
                 className="h-10 w-10 rounded-full object-cover"
               />
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white">
-                {userInfo?.mentor?.name?.charAt(0).toUpperCase() || "M"}
+                {userInfo?.profile?.name?.charAt(0).toUpperCase() || "M"}
               </div>
             )}
           </div>
 
-          <p className="font-semibold">{userInfo?.mentor?.name || "Mentor"}</p>
+          <p className="font-semibold">{userInfo?.profile?.name || "Mentor"}</p>
 
           <p className="truncate text-sm text-gray-500">
-            {userInfo?.mentor?.email || "mentor@example.com"}
+            {userInfo?.email || "mentor@example.com"}
           </p>
         </div>
         <button
@@ -173,7 +174,6 @@ export default function MentorLayout({
             >
               + Create Exercise
             </button>
-           
           </div>
         </header>
 

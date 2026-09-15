@@ -11,11 +11,17 @@ export default function LearnersLayout({
   const [user, setUser] = useState<{
     name?: string;
     email?: string;
-    image?: string;
+    image_url?: string;
   }>({});
+  
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+   function logout() {
+    localStorage.removeItem("access_token");
+    router.push("/login");
+  }
 
   useEffect(() => {
     async function loadUser() {
@@ -46,10 +52,7 @@ export default function LearnersLayout({
     }
     loadUser();
   }, []);
-  function logout() {
-    localStorage.removeItem("access_token");
-    router.push("/login");
-  }
+ 
   return (
     <div className="min-h-screen flex bg-[#f3efe3]">
       {/* Sidebar */}
@@ -136,9 +139,9 @@ export default function LearnersLayout({
         <div className="border-t border-white/10 pt-4 px-2">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-              {user.image ? (
+              {user.image_url ? (
                 <img
-                  src={user.image}
+                  src={user.image_url}
                   alt={user.name || "Profile photo"}
                   className="h-full w-full object-cover"
                 />
@@ -155,7 +158,7 @@ export default function LearnersLayout({
 
           <button
             className="mt-4 text-[10px] uppercase tracking-wider text-white/40 hover:text-[#b5651d]"
-            onClick={() => logout}
+            onClick={ logout}
           >
             Sign out
           </button>
