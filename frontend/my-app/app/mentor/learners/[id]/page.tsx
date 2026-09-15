@@ -1,7 +1,5 @@
-import { useState } from "react";
 
-export default function LearnerDetail() {
-  const [learner, setLearner] = useState<any>([]);
+export default function LearnerDetail({ learner }: { learner: any }) {
   return (
     <div>
       {learner?.map((learner_detail: any) => (
