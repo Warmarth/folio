@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import {
   LayoutDashboard,
   BookOpen,
@@ -135,7 +134,7 @@ export default function MentorLayout({
         <div className="absolute bottom-5 left-5 right-5 rounded-xl bg-gray-100 p-4">
           <div className="mb-3">
             {userInfo?.profile?.image_url ? (
-              <Image
+              <img
                 src={userInfo.profile.image_url}
                 alt="Mentor"
                 className="h-10 w-10 rounded-full object-cover"
