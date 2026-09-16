@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Exercise = {
   id: string;
@@ -13,8 +16,7 @@ type Exercise = {
 export default function ExercisesPage() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const router = useRouter();
 
   useEffect(() => {
     async function loadExercises() {
@@ -26,7 +28,8 @@ export default function ExercisesPage() {
       }
 
       try {
-        const response = await fetch(`${API_URL}/api/exercises/all_exercise?page=1&per_pages=10`,
+        const response = await fetch(
+          `${API_URL}/api/exercises/all_exercise?page=1&per_pages=10`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -57,35 +60,42 @@ export default function ExercisesPage() {
 
   return (
     <div className="grid gap-4">
-      {exercises.map((exercise) => (
-        <div
-          key={exercise.id}
-          className="bg-white border border-black/10 rounded-lg p-5 cursor-pointer"
-          onClick={() => {
-            window.location.href = `/dashboard/exercises/${exercise.id}`;
-          }}
-        >
-          <h2 className="text-lg font-medium">{exercise.title}</h2>
+      <h2>Exercises</h2>
+      {exercises.length > 0 ? (
+        exercises.map((exercise) => (
+          <div
+            key={exercise.id}
+            className="bg-white border border-black/10 rounded-lg p-5 cursor-pointer"
+            onClick={() => {
+              router.push(`/dashboard/exercises/${exercise.id}`);
+            }}
+          >
+            <h2 className="text-lg font-medium">{exercise.title}</h2>
 
-          <div className="flex gap-2 mt-2 text-xs">
-            {exercise.created_at && (
-              <span className="px-2 py-1 bg-[#ebe6d7] rounded">
-                {exercise.created_at}
-              </span>
-            )}
+            <div className="flex gap-2 mt-2 text-xs">
+              {exercise.created_at && (
+                <span className="px-2 py-1 bg-[#ebe6d7] rounded">
+                  {exercise.created_at}
+                </span>
+              )}
 
-            {exercise.level && (
-              <span className="px-2 py-1 bg-[#ebe6d7] rounded">
-                {exercise.level}
-              </span>
+              {exercise.level && (
+                <span className="px-2 py-1 bg-[#ebe6d7] rounded">
+                  {exercise.level}
+                </span>
+              )}
+            </div>
+
+            {exercise.description && (
+              <p className="text-sm text-black/50 mt-3">
+                {exercise.description}
+              </p>
             )}
           </div>
-
-          {exercise.description && (
-            <p className="text-sm text-black/50 mt-3">{exercise.description}</p>
-          )}
-        </div>
-      ))}
+        ))
+      ) : (
+        <p>No exercises</p>
+      )}
     </div>
   );
 }

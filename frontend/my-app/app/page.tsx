@@ -483,7 +483,7 @@ export default function Home() {
                 fontWeight: 700,
               }}
             >
-              Don't learn alone.
+              Don&apos;t learn alone.
             </h2>
 
             <p

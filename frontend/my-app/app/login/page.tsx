@@ -78,7 +78,7 @@ async function handleLogin(event: FormEvent<HTMLFormElement>) {
           </div>
 
           <p className="max-w-xs font-serif text-xl leading-relaxed text-white/85">
-            A single place to keep what you've made, test what you know,
+            A single place to keep what you&apos;ve made, test what you know,
             and grow as a developer.
           </p>
 

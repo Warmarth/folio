@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 
+type Learner = { id: string; email?: string; role?: string };
+
 export default function Learner() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const [learners, setLearners] = useState<any[]>([]);
+  const [learners, setLearners] = useState<Learner[]>([]);
 
   useEffect(() => {
     const fetchLearners = async () => {

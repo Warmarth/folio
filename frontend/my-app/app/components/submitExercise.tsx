@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -77,7 +77,7 @@ export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
     }
   }
 
-  async function get_exercise() {
+  const getExercise = useCallback(async () => {
     const token = localStorage.getItem("access_token");
 
     if (!token) {
@@ -120,11 +120,14 @@ export default function SubmitExercise({ exerciseId }: SubmitExerciseProps) {
     } finally {
       setCheckingSubmission(false);
     }
-  }
+  }, [exerciseId]);
 
   useEffect(() => {
-    get_exercise();
-  }, [exerciseId]);
+    const timeoutId = window.setTimeout(() => {
+      void getExercise();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [getExercise]);
 
   if (checkingSubmission) {
     return (

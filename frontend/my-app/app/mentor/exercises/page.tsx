@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Exercise from "../components/Exercise";
 
 interface ExerciseData {
@@ -15,6 +16,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const ExercisesPage = () => {
   const [exercises, setExercises] = useState<ExerciseData[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchExercises = async () => {
@@ -59,8 +61,8 @@ const ExercisesPage = () => {
 
       <div className="grid grid-cols-1 gap-4">
         {exercises.length > 0 ? (
-          exercises.map((exercise:any) => (
-            <div key={exercise.id} onClick={() => window.location.href = `/mentor/exercises/${exercise.id}`}>
+          exercises.map((exercise) => (
+            <div key={exercise.id} onClick={() => router.push(`/mentor/exercises/${exercise.id}`)}>
               <Exercise
                 key={exercise.id}
                 title={exercise.title || ""}

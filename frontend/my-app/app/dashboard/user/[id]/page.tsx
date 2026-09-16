@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Profile = {
   id: string;
@@ -18,7 +20,7 @@ export default function UserProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const router = useRouter();
 
   useEffect(() => {
     async function loadProfile() {
@@ -95,7 +97,7 @@ export default function UserProfilePage() {
       </div>
       <button
         onClick={() => {
-          window.location.href = "/dashboard";
+          router.push("/dashboard");
         }}
         className="mb-6 text-sm text-black/50 hover:text-black"
       >

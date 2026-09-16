@@ -1,8 +1,10 @@
 
-export default function LearnerDetail({ learner }: { learner: any }) {
+type Learner = { id: string; email?: string; role?: string };
+
+export default function LearnerDetail({ learner }: { learner: Learner[] }) {
   return (
     <div>
-      {learner?.map((learner_detail: any) => (
+      {learner.map((learner_detail) => (
         <div
           key={learner_detail?.id}
           className="bg-white rounded-2xl border shadow-sm p-6 hover:shadow-md transition"

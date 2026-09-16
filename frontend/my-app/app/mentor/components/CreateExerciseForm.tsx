@@ -197,7 +197,7 @@ export default function CreateExerciseForm() {
           />
 
           <p className="mt-2 text-xs text-gray-500">
-            These criteria can be used by Folio's AI evaluator when
+            These criteria can be used by Folio&apos;s AI evaluator when
             scoring submissions.
           </p>
         </div>

@@ -1,14 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+type Profile = { id: string; name?: string; email?: string; bio?: string; image?: string };
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function DashboardPage() {
-  const [profiles, setProfiles] = useState<any[]>([]);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-  useEffect(() => {
-    loadProfiles();
-  }, []);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const router = useRouter();
 
   console.log(profiles);
 
@@ -39,6 +38,13 @@ export default function DashboardPage() {
     }
   }
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadProfiles();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
   return (
     <>
       <h1 className="font-serif text-3xl">Folio Dashboard</h1>
@@ -51,7 +57,7 @@ export default function DashboardPage() {
             <div
               key={profile.id}
               onClick={() => {
-                window.location.href = `/dashboard/user/${profile.id}`;
+                router.push(`/dashboard/user/${profile.id}`);
               }}
               className="bg-white border border-black/10 rounded-lg p-5 cursor-pointer hover:border-[#3e7c74] transition"
             >

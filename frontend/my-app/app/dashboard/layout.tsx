@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function LearnersLayout({
   children,
@@ -14,7 +17,6 @@ export default function LearnersLayout({
     image_url?: string;
   }>({});
   
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
 
 
@@ -68,19 +70,19 @@ export default function LearnersLayout({
             Learn
           </p>
 
-          <a
+          <Link
             href="/dashboard/exercises"
             className="block px-3 py-2 text-sm text-white/70 hover:bg-white/5 rounded"
           >
             ▤ Exercises
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/dashboard/projects"
             className="block px-3 py-2 text-sm text-white/70 hover:bg-white/5 rounded"
           >
             ▦ Projects
-          </a>
+          </Link>
 
           <a
             href="/dashboard/code-review"
@@ -96,12 +98,12 @@ export default function LearnersLayout({
             Grow
           </p>
 
-          <a
+          <Link
             href="/dashboard/mentorship"
             className="block px-3 py-2 text-sm text-white/70 hover:bg-white/5 rounded"
           >
             ◎ Mentorship
-          </a>
+          </Link>
 
           <a
             href="/dashboard/progress"

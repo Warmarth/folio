@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import SubmitExercise from "@/app/components/submitExercise";
+
+type Exercise = { title?: string; description?: string };
 
 export default function ExerciseDetailsPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [exercise, setExercise] = useState<any>(null);
+  const [exercise, setExercise] = useState<Exercise | null>(null);
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [submitPage, setSubmitPage] = useState(false);
 
@@ -81,7 +84,7 @@ export default function ExerciseDetailsPage() {
       {submitPage && <SubmitExercise exerciseId={id} />}
       <button
         onClick={() => {
-          window.location.href = "/dashboard";
+          router.push("/dashboard");
         }}
         className="mb-6 text-sm text-black/50 hover:text-black"
       >

@@ -87,7 +87,7 @@ export default function RegisterPage() {
           <div>
             <p className="max-w-xs font-serif text-xl leading-relaxed text-white/85">
               A single place to build your skills, test what you know,
-              and keep track of what you've actually made.
+              and keep track of what you&apos;ve actually made.
             </p>
           </div>
 
@@ -227,4 +227,3 @@ export default function RegisterPage() {
     </main>
   );
 }
-            

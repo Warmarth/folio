@@ -11,15 +11,26 @@ import StatCard from "../components/StatCard";
 import Exercise from "../components/Exercise";
 import Activity from "../components/Activty";
 import Submission from "../components/submission";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function MentorDashboard() {
-  const [exercises, setExercises] = useState<any>([]);
-  const [submitted, setSubmitted] = useState<any>([]);
-  const [loading, setLoading] = useState(false);
+type ExerciseData = {
+  id: string;
+  title?: string;
+  description?: string;
+  level?: string;
+  xp_points?: number;
+};
 
-  const router = useRouter()
+type SubmissionData = {
+  id: string;
+  user_name?: string;
+  exercise_name?: string;
+  submitted_at?: string;
+};
+
+export default function MentorDashboard() {
+  const [exercises, setExercises] = useState<ExerciseData[]>([]);
+  const [submitted, setSubmitted] = useState<SubmissionData[]>([]);
 
   useEffect(() => {
     async function loadExercises() {
@@ -64,8 +75,6 @@ export default function MentorDashboard() {
         setSubmitted(data.data || []);
       } catch (err) {
         console.error("Error loading submissions:", err);
-      } finally {
-        setLoading(false);
       }
     }
 
@@ -83,7 +92,7 @@ export default function MentorDashboard() {
           <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Exercises"
-              value={exercises ? exercises.length : "No Exercise"}
+              value={String(exercises.length)}
               description="+2 this month"
               icon={<BookOpen size={20} />}
             />
@@ -129,7 +138,7 @@ export default function MentorDashboard() {
 
               <div className="space-y-3">
                 {exercises.length > 0 ? (
-                  exercises.map((exercise: any) => (
+                  exercises.map((exercise) => (
                     <Exercise
                       key={exercise.id}
                       title={exercise.title || ""}
@@ -152,12 +161,12 @@ export default function MentorDashboard() {
               </div>
 
               <div className="space-y-5">
-                {submitted?.map((submit: any) => (
+                {submitted.map((submit) => (
                   <Activity
                     key={submit.id}
                     icon={<CheckCircle2 size={18} />}
                     text={`${submit.user_name} submitted ${submit.exercise_name}`}
-                    time={submit.submitted_at}
+                    time={submit.submitted_at ?? ""}
                   />
                 ))}
               </div>

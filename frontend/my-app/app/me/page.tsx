@@ -15,9 +15,8 @@ type UserProfile = {
   view_count?: number;
 };
 
-type EditMethod = "PATCH" | "PUT";
 type ProfileMode = "create" | "edit";
-const editMethod: EditMethod = "PATCH";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -31,8 +30,6 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -332,7 +329,7 @@ export default function DashboardPage() {
             <div>
               <button
                 onClick={() => {
-                  window.location.href = "/dashboard";
+                  router.push("/dashboard");
                 }}
                 className="mb-6 text-sm text-black/50 hover:text-black"
               >
