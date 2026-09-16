@@ -120,7 +120,7 @@ export default function DashboardPage() {
 
         imageUrl = uploadData.image_url;
       }
-
+      console.log(imageUrl)
       // CREATE
       if (mode === "create") {
         const response = await fetch(`${API_URL}/api/create_profile`, {

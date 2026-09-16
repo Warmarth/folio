@@ -47,7 +47,7 @@ export default function MentorRegisterPage() {
     setLoading(true);
 
     try {
-      let image_url: string | undefined;
+      let imageUrl: string | undefined;
 
       // step 1: if an image was picked, upload it first and get back its URL
       if (image) {
@@ -68,7 +68,7 @@ export default function MentorRegisterPage() {
           throw new Error(uploadData.error || "Failed to upload image");
         }
 
-        image_url = uploadData.image_url;
+        imageUrl = uploadData.image_url;
       }
 
       // step 2: create the mentor profile with the resulting image_url (if any)
@@ -84,7 +84,7 @@ export default function MentorRegisterPage() {
             name: name.trim(),
             bio: bio.trim(),
             expertise: expertise.trim(),
-            image_url,
+            image_url:imageUrl
           }),
         }
       );
