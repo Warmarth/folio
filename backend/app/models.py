@@ -250,6 +250,7 @@ class MentorLearner(db.Model):
     __table_args__ = (
         db.Index("ix_mentor_learner_mentor_status", "mentor_id", "status"),
         db.Index("ix_mentor_learner_learner_status", "learner_id", "status"),
+        db.UniqueConstraint("mentor_id","learner_id",name="uq_mentor_learner_pair"),
     )
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

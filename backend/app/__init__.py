@@ -5,6 +5,7 @@ from app.routes.routes import api
 from app.auth.routes import auth
 from app.routes.exercise_route import exercise
 from app.routes.submitted import submitted
+from app.routes.mentorlearner import mentor_learner_bp
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
@@ -31,7 +32,8 @@ def create_app(config_name='development'):
         }
     },
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"]
+    allow_headers=["Content-Type", "Authorization"],
+    supports_credentials=True
 )
 
     
@@ -40,6 +42,8 @@ def create_app(config_name='development'):
     app.register_blueprint(api,url_prefix='/api')
     app.register_blueprint(exercise,url_prefix='/api/exercises')
     app.register_blueprint(submitted,url_prefix='/api/submit')
+    app.register_blueprint(mentor_learner_bp, url_prefix='/api/mentor')
+    
     
     with app.app_context():
         db.create_all()
