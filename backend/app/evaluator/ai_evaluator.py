@@ -34,7 +34,7 @@ Rules:
 - The answer does not need to use the exact wording of the exercise description.
 - If the answer demonstrates the required understanding, pass it.
 """
-    print("GEMINI KEY:", "SET" if os.getenv("GROQ_API_KEY") else "NOT SET")
+    # print("G KEY:", "SET" if os.getenv("GROQ_API_KEY") else "NOT SET")
     completion = client.chat.completions.create(
         model="openai/gpt-oss-120b",
         messages=[
@@ -53,10 +53,3 @@ Rules:
     content = completion.choices[0].message.content
 
     return json.loads(content)
-
-
-# print(evaluator_ai({
-#     'title':"basic print in python",
-#     'description':"print a basic hello world",
-#     "answer":"print('hello world')"
-# }))

@@ -64,3 +64,7 @@ def get_relationship_status(mentor_id: str, learner_id: str):
 def get_startmentorship_request(mentor_id:str):
     """Return all user that has sent a mentorship request"""
     return repo.get_mentee(mentor_id=mentor_id)
+
+def get_startmentorship_active(mentor_id:str):
+    """Return all user that has acive mentorship"""
+    return repo.get_mentee_accepted(mentor_id=mentor_id)

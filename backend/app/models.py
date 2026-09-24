@@ -2,6 +2,7 @@ from app.database import db
 import uuid
 import enum
 from datetime import datetime,timezone
+from sqlalchemy.ext.associationproxy import association_proxy
 
 
 # ---------------------------------------------------------------------------
@@ -80,18 +81,8 @@ class User(db.Model):
     project_submissions = db.relationship("ProjectSubmission", back_populates="user", lazy="dynamic")
 
     # mentor-side and learner-side of the MentorLearner relationship
-    mentees = db.relationship(
-        "MentorLearner",
-        foreign_keys="MentorLearner.mentor_id",
-        back_populates="mentor",
-        lazy="dynamic",
-    )
-    mentors = db.relationship(
-        "MentorLearner",
-        foreign_keys="MentorLearner.learner_id",
-        back_populates="learner",
-        lazy="dynamic",
-    )
+    mentees = db.relationship("MentorLearner",foreign_keys="MentorLearner.mentor_id",back_populates="mentor",lazy="dynamic",)
+    mentors = db.relationship("MentorLearner",foreign_keys="MentorLearner.learner_id",back_populates="learner",lazy="dynamic",)
 
 
 class Profile(db.Model):
@@ -113,6 +104,10 @@ class Profile(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = db.relationship("User", back_populates="profile")
+    
+        # mentor-side and learner-side of the MentorLearner relationship
+    # menteesp = db.relationship("MentorLearner",foreign_keys="MentorLearner.mentor_id",back_populates="mentor",lazy="dynamic",)
+    # mentorsp = db.relationship("MentorLearner",foreign_keys="MentorLearner.learner_id",back_populates="learner",lazy="dynamic",)
 
     def to_dict(self):
         return {
@@ -263,14 +258,16 @@ class MentorLearner(db.Model):
 
     mentor = db.relationship("User", foreign_keys=[mentor_id], back_populates="mentees")
     learner = db.relationship("User", foreign_keys=[learner_id], back_populates="mentors")
+    mentor_profile = association_proxy("mentor", "profile")
+    learner_profile = association_proxy("learner", "profile")
 
     def to_dict(self):
         return {
             "id": self.id,
             "mentor_id": self.mentor_id,
-            "mentor_name": self.mentor.profile.name if self.mentor and self.mentor.profile else None,
+            "mentor_name":( self.mentor_profile.name if self. mentor_profile else None),
             "learner_id": self.learner_id,
-            "learner_name": self.learner.profile.name if self.learner and self.learner.profile else None,
+            "learner_name": self.learner_profile.name if self.learner_profile else None,
             "status": self.status.value,
             "requested_at": self.requested_at.isoformat() if self.requested_at else None,
             "responded_at": self.responded_at.isoformat() if self.responded_at else None,

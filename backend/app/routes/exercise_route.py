@@ -1,6 +1,6 @@
 from flask import request,jsonify,Blueprint
 from app.database import db
-from app.models import Exercise, User, RoleEnum, LevelEnum
+from app.models import Exercise, User, RoleEnum, LevelEnum,MentorLearner,MentorLearnerStatusEnum
 from flask_jwt_extended import jwt_required,get_jwt_identity
 
 #creating the skeleton name for the exercise api
@@ -53,7 +53,7 @@ def create_exercise():
     exe_card  = Exercise(
         title = title,
         description = description,
-        level = LevelEnum(level),
+        level = level,
         xp_points = xp_points,
         created_by = user_id
     )
@@ -66,26 +66,46 @@ def create_exercise():
     }), 201
 
 
-@exercise.route('/all_exercise',methods=['GET'])
+@exercise.route('/all_exercise', methods=['GET'])
 @jwt_required()
 def get_all_exercises():
-    page = request.args.get('page',1,type=int)
-    per_page = request.args.get('per_page',10,type=int) 
-    per_page = min(per_page,50)
-    
-    pagination = Exercise.query.order_by(Exercise.created_at.desc()).paginate(page=page,per_page=per_page,error_out=False)
-    
-    return {
-        "data":[exercise.to_dict() for exercise in pagination.items],
-        "pagination":{
-            "page":pagination.page,
-            "per_page":pagination.per_page,
-            "total":pagination.total,
-            "pages":pagination.pages,
-            "has_next":pagination.has_next,
-            "has_prev":pagination.has_prev
+
+    user_id = get_jwt_identity()
+    mentor_relationships = MentorLearner.query.filter_by(learner_id=user_id,status=MentorLearnerStatusEnum.active).all()
+
+    mentor_ids = [rel.mentor_id for rel in mentor_relationships]
+
+    if not mentor_ids:
+        return jsonify({
+            "data": [],
+            "pagination": {
+                "page": 1,
+                "per_page": 10,
+                "total": 0,
+                "pages": 0,
+                "has_next": False,
+                "has_prev": False
+            }
+        }),200
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    per_page = min(per_page, 50)
+
+    pagination = Exercise.query.filter(Exercise.created_by.in_(mentor_ids)).order_by(Exercise.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False)
+
+    return jsonify({
+        "data": [exercise.to_dict() for exercise in pagination.items],
+        "pagination": {
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_prev": pagination.has_prev
         }
-    }
+    }),200
     
 @exercise.route('/all_exercise/<string:id>')
 @jwt_required()

@@ -1,4 +1,4 @@
-from app.models import MentorLearner,MentorLearnerStatusEnum
+from app.models import MentorLearner,MentorLearnerStatusEnum,User
 from app.database import db
 from datetime import datetime,timezone
 
@@ -40,6 +40,11 @@ def update_status(row:MentorLearner,new_status:MentorLearnerStatusEnum):
 
 def get_mentee(mentor_id: str):
     """Get all mentorship requests/relationships for a given mentor (by profile ID)."""
-    return MentorLearner.query.filter_by(mentor_id=mentor_id).order_by(
+    return MentorLearner.query.filter_by(mentor_id=mentor_id,status=MentorLearnerStatusEnum.pending).order_by(
+        MentorLearner.requested_at.desc()
+    ).all()
+def get_mentee_accepted(mentor_id: str):
+    """Get all acive mentee /relationships for a given mentor (by profile ID)."""
+    return MentorLearner.query.filter_by(mentor_id=mentor_id,status=MentorLearnerStatusEnum.active).order_by(
         MentorLearner.requested_at.desc()
     ).all()
