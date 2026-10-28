@@ -17,6 +17,12 @@ class RoleEnum(str, enum.Enum):
     admin = "admin"
 
 
+class LanguageEnum(enum.Enum):
+    GO = "go"
+    PYTHON = "python"
+    JAVASCRIPT = "javascript"
+    TYPESCRIPT = "typescript"
+    
 class LevelEnum(str, enum.Enum):
     easy = "easy"
     medium = "medium"
@@ -129,27 +135,78 @@ class Exercise(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.Text, nullable=False)   # was String(500)
     level = db.Column(db.Enum(LevelEnum), nullable=False)
     xp_points = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     created_by = db.Column(db.String(36), db.ForeignKey('user.id'), index=True)
+    
+    # new: the parts that used to be merged into description
+    category = db.Column(db.String(30), nullable=False, default="other")
+    instructions = db.Column(db.Text, nullable=False, default="")
+    evaluation_criteria = db.Column(db.Text, nullable=False, default="")   # for the AI evaluator; mentors only
+    # new
+    language = db.Column(db.Enum(LanguageEnum), nullable=False, default=LanguageEnum.GO)
+    starter_code = db.Column(db.Text, nullable=False, default="")
 
     creator = db.relationship('User', back_populates='exercises_created')
     progress = db.relationship("ExerciseProgress", back_populates="exercise", lazy="dynamic")
     submissions = db.relationship("Submit_Exercise", back_populates="exercise", lazy="dynamic")
+    test_cases = db.relationship(
+        "ExerciseTestCase",
+        back_populates="exercise",
+        cascade="all, delete-orphan",
+        order_by="ExerciseTestCase.created_at",
+    )
 
     def to_dict(self):
+        """Safe for learners: only the visible example tests."""
         return {
             "id": self.id,
             "title": self.title,
             "description": self.description,
             "level": self.level.value,
             "xp_points": self.xp_points,
+            "category": self.category,
+            "instructions": self.instructions,
+            "language": self.language.value,
+            "starter_code": self.starter_code,
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "examples": [t.to_dict() for t in self.test_cases if not t.is_hidden],
+            "test_count": len(self.test_cases),
         }
+ 
+    def to_mentor_dict(self):
+        """Mentors also see every test, hidden ones included."""
+        data = self.to_dict()
+        data["evaluation_criteria"] = self.evaluation_criteria
+        data["test_cases"] = [t.to_dict(for_mentor=True) for t in self.test_cases]
+        return data
 
+
+class ExerciseTestCase(db.Model):
+    # Not named TestCase, so pytest and unittest never mistake it for a test.
+    __tablename__ = 'exercise_test_cases'
+
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    exercise_id = db.Column(db.String(36), db.ForeignKey('exercises.id'), nullable=False, index=True)
+    stdin = db.Column(db.Text, nullable=False, default="")        # input fed to the program
+    expected_output = db.Column(db.Text, nullable=False)
+    is_hidden = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    exercise = db.relationship("Exercise", back_populates="test_cases")
+
+    def to_dict(self, for_mentor=False):
+        if self.is_hidden and not for_mentor:
+            return {"id": self.id, "is_hidden": True}   # never leak hidden tests
+        return {
+            "id": self.id,
+            "stdin": self.stdin,
+            "expected_output": self.expected_output,
+            "is_hidden": self.is_hidden,
+        }
 
 # tracks a user's interaction with an exercise (picked, in progress, etc.)
 class ExerciseProgress(db.Model):
@@ -423,21 +480,24 @@ class ProjectSubmission(db.Model):
         }
 
 
+
 class Submit_Exercise(db.Model):
     """Tracks actual submissions and grading.
-
-    `status` drives the async evaluation flow: a submission is created as
-    `pending`, a worker flips it to `evaluating` while it calls Groq, then
-    `completed` or `failed`. `is_completed` stays as a fast boolean flag
-    specifically meaning "passed", since that's what the unique constraint
-    and XP awarding key off of.
+ 
+    `status` drives the evaluation flow: a submission is created as `pending`,
+    flips to `evaluating` while it is graded, then `completed` or `failed`.
+    `is_completed` stays as a fast boolean flag meaning "passed", since the
+    unique constraint and XP awarding key off of it.
+ 
+    For code exercises, `test_results` holds one entry per test case:
+        {"test_id", "passed", "is_hidden", "actual_output", "stderr",
+         "exit_code", "timed_out", "duration_ms"}
     """
-
+ 
     __tablename__ = "submit_exercise"
     __table_args__ = (
-        # a user can only have ONE passed submission per exercise — enforced
-        # at the DB level so concurrent requests can't both sneak through
-        # the app-level "already completed" check.
+        # a user can only have ONE passed submission per exercise, enforced at
+        # the DB level so concurrent requests can't both sneak through.
         db.Index(
             "uq_submit_exercise_user_completed",
             "user_id", "exercise_id",
@@ -446,22 +506,38 @@ class Submit_Exercise(db.Model):
             postgresql_where=db.text("is_completed = true"),
         ),
     )
-
+ 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = db.Column(db.String(36), db.ForeignKey("user.id"), nullable=False, index=True)
     exercise_id = db.Column(db.String(36), db.ForeignKey("exercises.id"), nullable=False, index=True)
-    answer = db.Column(db.String(500), nullable=False)
+    answer = db.Column(db.Text, nullable=False)              # was String(500): code needs more room
     status = db.Column(db.Enum(SubmissionStatusEnum), nullable=False, default=SubmissionStatusEnum.pending)
     score = db.Column(db.Integer, nullable=True)
     feedback = db.Column(db.Text, nullable=True)
+    test_results = db.Column(db.JSON, nullable=True)         # new: per-test results for code exercises
+    reviewed_at = db.Column(db.DateTime, nullable=True)      # new: set when the exercise's mentor marks it reviewed
+    mentor_comment = db.Column(db.Text, nullable=True)       # new: the mentor's note to the learner
     submitted_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     completed_at = db.Column(db.DateTime, nullable=True)
     is_completed = db.Column(db.Boolean, default=False, nullable=False)
-
+ 
     user = db.relationship("User", back_populates="submissions")
     exercise = db.relationship("Exercise", back_populates="submissions")
-
+ 
+    def _learner_results(self):
+        """Hidden tests show only pass or fail, so nothing about them leaks."""
+        if self.test_results is None:
+            return None
+        out = []
+        for r in self.test_results:
+            if r.get("is_hidden"):
+                out.append({"test_id": r.get("test_id"), "is_hidden": True, "passed": r.get("passed")})
+            else:
+                out.append(r)
+        return out
+ 
     def to_dict(self):
+        """Learner-safe."""
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -472,7 +548,83 @@ class Submit_Exercise(db.Model):
             "status": self.status.value,
             "score": self.score,
             "feedback": self.feedback,
-            "submitted_at": self.submitted_at.isoformat() if self.submitted_at else None,
-            "complete_at": self.completed_at.isoformat() if self.completed_at else None,
+            "test_results": self._learner_results(),
+            "mentor_comment": self.mentor_comment,
+            "reviewed_at": _iso_utc(self.reviewed_at),
+            "submitted_at": _iso_utc(self.submitted_at),
+            "complete_at": _iso_utc(self.completed_at),
             "is_completed": self.is_completed,
         }
+ 
+    def to_summary_dict(self):
+        """Light version for the mentor's list: no code, no per-test details."""
+        results = self.test_results or []
+        return {
+            "id": self.id,
+            "user_name": (self.user.profile.name if self.user and self.user.profile else None),
+            "exercise_id": self.exercise_id,
+            "exercise_name": self.exercise.title,
+            "status": self.status.value,
+            "score": self.score,
+            "is_completed": self.is_completed,
+            "passed_tests": sum(1 for r in results if r.get("passed")),
+            "total_tests": len(results),
+            "reviewed_at": _iso_utc(self.reviewed_at),
+            "submitted_at": _iso_utc(self.submitted_at),
+        }
+ 
+    def to_my_summary_dict(self):
+        """Light version for the learner's own list of reviewed code."""
+        results = self.test_results or []
+        creator = self.exercise.creator
+        return {
+            "id": self.id,
+            "exercise_name": self.exercise.title,
+            "mentor_name": (creator.profile.name if creator and creator.profile else None),
+            "is_completed": self.is_completed,
+            "score": self.score,
+            "passed_tests": sum(1 for r in results if r.get("passed")),
+            "total_tests": len(results),
+            "reviewed_at": _iso_utc(self.reviewed_at),
+            "submitted_at": _iso_utc(self.submitted_at),
+        }
+ 
+    def to_mentor_dict(self):
+        """Mentors see every test result, hidden ones included."""
+        data = self.to_dict()
+        data["test_results"] = self.test_results
+        return data
+  
+def _iso_utc(dt):
+    """ISO string that always says 'UTC', so browsers show the right local time.
+    (SQLite hands datetimes back without a timezone, which browsers read as local time.)"""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+ 
+ 
+class SubmissionMessage(db.Model):
+    """One chat message between a learner and their mentor, about one submission."""
+ 
+    __tablename__ = "submission_messages"
+ 
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    submission_id = db.Column(db.String(36), db.ForeignKey("submit_exercise.id"), nullable=False, index=True)
+    sender_id = db.Column(db.String(36), db.ForeignKey("user.id"), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+ 
+    sender = db.relationship("User")
+ 
+    def to_dict(self, viewer_id):
+        profile = self.sender.profile if self.sender else None
+        return {
+            "id": self.id,
+            "sender_name": (profile.name if profile else None) or "Unknown",
+            "is_mine": self.sender_id == viewer_id,
+            "body": self.body,
+            "created_at": _iso_utc(self.created_at),
+        }
+ 

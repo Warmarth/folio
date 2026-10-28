@@ -1,0 +1,162 @@
+[
+  {
+    "title": "Reverse a word",
+    "description": "Read a word and print it backwards.",
+    "category": "programming",
+    "level": "easy",
+    "instructions": "The program receives one word on a single line. Print the word with its letters in reverse order. Accented and other non-English letters must stay intact. Example: `hello` prints `olleh`.",
+    "evaluation_criteria": "Works on runes, not bytes, so non-English letters are not broken. Handles one-letter words. No unnecessary variables or libraries.",
+    "language": "go",
+    "starter_code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar word string\n\tfmt.Scan(&word)\n\t// print the word reversed\n\tfmt.Println(word)\n}\n",
+    "test_cases": [
+      {
+        "stdin": "hello",
+        "expected_output": "olleh",
+        "is_hidden": false
+      },
+      {
+        "stdin": "Go",
+        "expected_output": "oG",
+        "is_hidden": true
+      },
+      {
+        "stdin": "racecar",
+        "expected_output": "racecar",
+        "is_hidden": true
+      },
+      {
+        "stdin": "héllo",
+        "expected_output": "olléh",
+        "is_hidden": true
+      }
+    ]
+  },
+  {
+    "title": "Even or odd",
+    "description": "Read an integer and say whether it is even or odd.",
+    "category": "programming",
+    "level": "easy",
+    "instructions": "The program receives one integer, which may be negative or zero. Print `even` if it is divisible by 2, otherwise print `odd`. Example: `7` prints `odd`.",
+    "evaluation_criteria": "Uses the remainder operator. Correct for negative numbers and zero. No string conversion.",
+    "language": "go",
+    "starter_code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar n int\n\tfmt.Scan(&n)\n\t// print \"even\" or \"odd\"\n\tfmt.Println(n)\n}\n",
+    "test_cases": [
+      {
+        "stdin": "4",
+        "expected_output": "even",
+        "is_hidden": false
+      },
+      {
+        "stdin": "7",
+        "expected_output": "odd",
+        "is_hidden": true
+      },
+      {
+        "stdin": "0",
+        "expected_output": "even",
+        "is_hidden": true
+      },
+      {
+        "stdin": "-3",
+        "expected_output": "odd",
+        "is_hidden": true
+      }
+    ]
+  },
+  {
+    "title": "Count the vowels",
+    "description": "Count how many vowels a line of text contains.",
+    "category": "programming",
+    "level": "medium",
+    "instructions": "The program receives one line of text, possibly with spaces. Print how many vowels it contains. The vowels are a, e, i, o and u, in lowercase or uppercase. Example: `Hello World` prints `3`.",
+    "evaluation_criteria": "Reads the whole line, not just the first word. Counts upper and lower case. Readable loop with no repeated code.",
+    "language": "go",
+    "starter_code": "package main\n\nimport (\n\t\"bufio\"\n\t\"fmt\"\n\t\"os\"\n)\n\nfunc main() {\n\tscanner := bufio.NewScanner(os.Stdin)\n\tscanner.Scan()\n\tline := scanner.Text()\n\t// count the vowels in line and print the number\n\tfmt.Println(line)\n}\n",
+    "test_cases": [
+      {
+        "stdin": "Hello World",
+        "expected_output": "3",
+        "is_hidden": false
+      },
+      {
+        "stdin": "rhythm",
+        "expected_output": "0",
+        "is_hidden": true
+      },
+      {
+        "stdin": "AEIOU aeiou",
+        "expected_output": "10",
+        "is_hidden": true
+      },
+      {
+        "stdin": "Programming in Go",
+        "expected_output": "5",
+        "is_hidden": true
+      }
+    ]
+  },
+  {
+    "title": "Sum of a list",
+    "description": "Read a list of integers and print their sum.",
+    "category": "programming",
+    "level": "medium",
+    "instructions": "The first line holds a number n. The next line holds n integers separated by spaces. Print their sum. The list can be empty (n is 0), and numbers can be negative. Example: `3` then `1 2 3` prints `6`.",
+    "evaluation_criteria": "Reads exactly n numbers. Handles n = 0 and negative numbers. Uses a running total, not a slice, unless justified.",
+    "language": "go",
+    "starter_code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar n int\n\tfmt.Scan(&n)\n\t// read n numbers and print their sum\n\tfmt.Println(n)\n}\n",
+    "test_cases": [
+      {
+        "stdin": "3\n1 2 3",
+        "expected_output": "6",
+        "is_hidden": false
+      },
+      {
+        "stdin": "1\n-5",
+        "expected_output": "-5",
+        "is_hidden": true
+      },
+      {
+        "stdin": "5\n10 20 30 40 50",
+        "expected_output": "150",
+        "is_hidden": true
+      },
+      {
+        "stdin": "0\n",
+        "expected_output": "0",
+        "is_hidden": true
+      }
+    ]
+  },
+  {
+    "title": "Most frequent word",
+    "description": "Find the word that appears most often in a line.",
+    "category": "programming",
+    "level": "hard",
+    "instructions": "The program receives one line of lowercase words separated by spaces. Print the word that appears most often. If several words are tied, print the one that comes first alphabetically. Example: `the cat and the dog and the bird` prints `the`.",
+    "evaluation_criteria": "Uses a map to count words. Breaks ties alphabetically in a deterministic way, not by map order. Clear, short code.",
+    "language": "go",
+    "starter_code": "package main\n\nimport (\n\t\"bufio\"\n\t\"fmt\"\n\t\"os\"\n)\n\nfunc main() {\n\tscanner := bufio.NewScanner(os.Stdin)\n\tscanner.Split(bufio.ScanWords)\n\tcounts := map[string]int{}\n\tfor scanner.Scan() {\n\t\tcounts[scanner.Text()]++\n\t}\n\t// find the most frequent word and print it\n\tfmt.Println(len(counts))\n}\n",
+    "test_cases": [
+      {
+        "stdin": "the cat and the dog and the bird",
+        "expected_output": "the",
+        "is_hidden": false
+      },
+      {
+        "stdin": "b a b a",
+        "expected_output": "a",
+        "is_hidden": true
+      },
+      {
+        "stdin": "one",
+        "expected_output": "one",
+        "is_hidden": true
+      },
+      {
+        "stdin": "go is fun and go is fast",
+        "expected_output": "go",
+        "is_hidden": true
+      }
+    ]
+  }
+]

@@ -17,6 +17,8 @@ Folio is a Flask API for a developer-learning platform. It supports learner and 
 - A Groq API key for AI exercise evaluation
 - Cloudflare R2 credentials only if you use remote image uploads
 
+`backend/requirements.txt` lists only the packages needed to run the API; pip installs their supporting dependencies automatically. Development and load-testing tools are not included in the Docker image.
+
 ## Configure
 
 From the repository root, create `backend/.env`:
@@ -58,7 +60,7 @@ From `backend/`:
 docker compose up --build
 ```
 
-Docker Compose reads `backend/.env` and persists SQLite data in `backend/instance/`.
+Docker Compose reads `backend/.env` and persists SQLite data in `backend/instance/`. Rebuild after changing dependencies with `docker compose build`, then start the API with `docker compose up`.
 
 ## Authentication
 
