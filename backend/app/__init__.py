@@ -10,6 +10,7 @@ from app.routes.run_routes import run_bp
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from datetime import timedelta
+from app.keep import start_keep_alive
 
 def create_app(config_name='development'):
     app = Flask(__name__,instance_relative_config=True)
@@ -50,6 +51,7 @@ def create_app(config_name='development'):
     app.register_blueprint(mentor_learner_bp, url_prefix='/api/mentor')
     app.register_blueprint(run_bp)
     
+    start_keep_alive()
     
     with app.app_context():
         db.create_all()
