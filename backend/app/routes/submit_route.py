@@ -525,3 +525,68 @@ def mentor_performance():
         "activity": activity,
     }}), 200
  
+ # ---------------------------------------------------------------------------
+# The mentor's Learners page: everyone in the group, with their XP, and a way to remove them.
+# ---------------------------------------------------------------------------
+ 
+@submitted.route('/mentor/learners', methods=['GET'])
+@jwt_required()
+def mentor_learners():
+    user_id = get_jwt_identity()
+    if not _require_mentor(user_id):
+        return jsonify({"message": "Only mentors can view their learners"}), 403
+ 
+    learner_ids = [
+        link.learner_id for link in
+        MentorLearner.query.filter_by(mentor_id=user_id, status=MentorLearnerStatusEnum.active).all()
+    ]
+    learners = User.query.filter(User.id.in_(learner_ids)).options(joinedload(User.profile)).all() if learner_ids else []
+    exercise_count = Exercise.query.filter_by(created_by=user_id).count()
+ 
+    graded = _mentor_submissions(user_id).filter(
+        Submit_Exercise.status == SubmissionStatusEnum.completed,
+        Submit_Exercise.user_id.in_(learner_ids or [""]),
+    ).all()
+    passed, attempted, last_active = {}, {}, {}
+    for s in graded:
+        attempted.setdefault(s.user_id, set()).add(s.exercise_id)
+        if s.is_completed:
+            passed.setdefault(s.user_id, set()).add(s.exercise_id)
+        seen = _as_utc(s.submitted_at)
+        if s.user_id not in last_active or seen > last_active[s.user_id]:
+            last_active[s.user_id] = seen
+ 
+    rows = []
+    for u in learners:
+        profile = u.profile
+        rows.append({
+            "learner_id": u.id,
+            "name": (profile.name if profile else None) or u.email,
+            "email": u.email,
+            "image_url": getattr(profile, "image_url", None) if profile else None,
+            "xp": u.total_xp or 0,
+            "completed": len(passed.get(u.id, ())),
+            "attempted": len(attempted.get(u.id, ())),
+            "last_active": _iso(last_active.get(u.id)),
+        })
+    rows.sort(key=lambda row: (-row["xp"], row["name"].lower()))   # most XP first
+    return jsonify({"data": rows, "exercises": exercise_count}), 200
+ 
+ 
+@submitted.route('/mentor/learners/<string:learner_id>', methods=['DELETE'])
+@jwt_required()
+def mentor_remove_learner(learner_id):
+    """Takes a learner out of this mentor's group. Their own code, feedback and XP are kept."""
+    user_id = get_jwt_identity()
+    if not _require_mentor(user_id):
+        return jsonify({"message": "Only mentors can remove learners"}), 403
+ 
+    link = MentorLearner.query.filter_by(
+        mentor_id=user_id, learner_id=learner_id, status=MentorLearnerStatusEnum.active
+    ).first()
+    if link is None:
+        return jsonify({"message": "That learner is not in your group"}), 404
+ 
+    db.session.delete(link)
+    db.session.commit()
+    return jsonify({"message": "Learner removed"}), 200
